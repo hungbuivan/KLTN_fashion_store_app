@@ -87,7 +87,8 @@ class SignupScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const SizedBox(height: 60), // Giảm bớt để có không gian cho nút back
+
+                const SizedBox(height: 100), // Giảm bớt để có không gian cho nút back
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(

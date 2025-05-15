@@ -47,6 +47,7 @@ dependencies:
   smooth_page_indicator: ^1.1.0
   font_awesome_flutter: ^10.7.0 # Kiểm tra phiên bản mới nhất
   flutter_secure_storage: ^9.1.0
+  fl_chart: ^1.0.0
 
 
 

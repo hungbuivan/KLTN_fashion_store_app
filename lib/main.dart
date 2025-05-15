@@ -1,10 +1,12 @@
 // file: main.dart
 import 'package:fashion_store_app/providers/signup_provider.dart';
+import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/views/auth/decision_screen.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 
 // Import các provider của bạn
@@ -21,11 +23,13 @@ import 'screens/admin_panel_screen.dart';
 
 // Không cần biến global _hasSeenOnboardingGlobal nữa
 // bool _hasSeenOnboardingGlobal = false;
-
-// Hàm main không cần async nếu không đọc SharedPreferences ở đây
-void main() {
+final storage = FlutterSecureStorage();
+// Hàm main không cần async nếu không đọcFuture<void>redPrefeasync rences ở đây
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Vẫn cần thiết
   // Không đọc SharedPreferences ở đây nữa
+
+  await storage.deleteAll();
   runApp(const MyApp());
 }
 
@@ -54,16 +58,16 @@ class MyApp extends StatelessWidget {
         ),
         // ✅ Luôn bắt đầu với màn hình onboarding
         // Thay đổi:
-        initialRoute: '/', // <- Đây là màn hình quyết định đầu tiên
+        initialRoute: '/onboarding', // <- Đây là màn hình quyết định đầu tiên
 
         routes: {
-          '/': (context) => const DecisionScreen(), // <- Màn hình trung gian điều hướng
+
           '/onboarding': (context) => const OnboardingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
           '/signup': (context) => const SignupScreen(),
           '/home': (context) => const HomePage(),
-          '/admin_panel': (context) => const AdminPanelScreen(),
+          '/admin_panel': (context) => const AdminHomePage(),
         },
       ),
     );
