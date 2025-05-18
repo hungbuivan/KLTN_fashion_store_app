@@ -37,7 +37,7 @@ class OnboardingScreen extends StatelessWidget {
 
             // Các nút điều khiển và chỉ báo trang
             Positioned(
-              bottom: 40.0, // Vị trí từ dưới lên
+              bottom: 25.0, // Vị trí từ dưới lên
               left: 20.0,
               right: 20.0,
               child: Column(

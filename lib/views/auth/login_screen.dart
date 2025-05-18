@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../providers/auth_provider.dart'; // Đường dẫn đến AuthProvider
+import '../../providers/auth_provider.dart';
+import 'forgot_password_screen.dart'; // Đường dẫn đến AuthProvider
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -127,8 +128,12 @@ class LoginScreen extends StatelessWidget {
                               const SizedBox(height: 40,),
                               TextButton(
                                   onPressed: () {
-                                    // TODO: Điều hướng đến màn hình ForgotPasswordScreen
-                                    print("Forgot Password tapped");
+                                    // Reset trạng thái của ForgotPasswordProvider trước khi điều hướng (tùy chọn)
+                                    // Provider.of<ForgotPasswordProvider>(context, listen: false).resetState();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                    );
                                   },
                                   child: const Text("Forgot Password?", style: TextStyle(color: Colors.grey),)
                               ),

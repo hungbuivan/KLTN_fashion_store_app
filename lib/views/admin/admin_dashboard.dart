@@ -13,7 +13,8 @@ class AdminDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('📊 Biểu đồ thống kê sản phẩm', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Dashboard', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+            const Text('Biểu đồ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             SizedBox(
               height: 200,

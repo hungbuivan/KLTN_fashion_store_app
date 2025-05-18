@@ -1,10 +1,13 @@
 // file: main.dart
+import 'package:fashion_store_app/providers/forgot_password_provider.dart';
+import 'package:fashion_store_app/providers/product_admin_provider.dart';
 import 'package:fashion_store_app/providers/signup_provider.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/views/auth/decision_screen.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
+import 'package:fashion_store_app/widgets/navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +46,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => SignupProvider()),
+        ChangeNotifierProvider(create: (_) => ProductAdminProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
         // Thêm các provider khác nếu cần, ví dụ SignupProvider
         // ChangeNotifierProvider(create: (_) => SignupProvider()),
       ],
@@ -66,7 +71,7 @@ class MyApp extends StatelessWidget {
           '/welcome': (context) => const WelcomeScreen(),
           '/login': (context) => const LoginScreen(),
           '/signup': (context) => const SignupScreen(),
-          '/home': (context) => const HomePage(),
+          '/home': (context) => const NavigationMenu(),
           '/admin_panel': (context) => const AdminHomePage(),
         },
       ),
