@@ -2,6 +2,7 @@
 import 'package:fashion_store_app/providers/forgot_password_provider.dart';
 import 'package:fashion_store_app/providers/product_admin_provider.dart';
 import 'package:fashion_store_app/providers/signup_provider.dart';
+import 'package:fashion_store_app/providers/user_admin_provider.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/views/auth/decision_screen.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SignupProvider()),
         ChangeNotifierProvider(create: (_) => ProductAdminProvider()),
         ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
+        ChangeNotifierProvider(create: (_) => UserAdminProvider()),
         // Thêm các provider khác nếu cần, ví dụ SignupProvider
         // ChangeNotifierProvider(create: (_) => SignupProvider()),
       ],
