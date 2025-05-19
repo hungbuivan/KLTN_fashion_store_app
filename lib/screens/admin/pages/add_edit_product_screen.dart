@@ -1,5 +1,4 @@
 // file: lib/screens/admin/pages/add_edit_product_screen.dart
-import 'package:fashion_store_app/core/theme/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -224,13 +223,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         imageToShowUrl = backendBaseUrl + pathOrUrl;
       } else {
         // Giả sử là tên file nếu không phải URL và không bắt đầu bằng /
-        imageToShowUrl = backendBaseUrl + "/images/products/" + pathOrUrl;
+        imageToShowUrl = "$backendBaseUrl/images/products/$pathOrUrl";
       }
       print("AddEditScreen build: Value PASSED to Image.network: '$imageToShowUrl'"); // << IN Ở ĐÂY
       imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(7),
         child: Image.network(
-          imageToShowUrl!, // Chắc chắn không null ở đây do điều kiện if
+          imageToShowUrl, // Chắc chắn không null ở đây do điều kiện if
           //key: ValueKey(imageToShowUrl),
           fit: BoxFit.cover,
           width: double.infinity,

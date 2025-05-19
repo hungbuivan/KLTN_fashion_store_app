@@ -42,10 +42,14 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
 
   Future<void> _loadProducts({bool refresh = false, bool loadMore = false}) async {
     final provider = Provider.of<ProductAdminProvider>(context, listen: false);
-    if (refresh) _currentPage = 0;
-    else if (loadMore) {
-      if (provider.pageData != null && !provider.pageData!.last) _currentPage++;
-      else return;
+    if (refresh) {
+      _currentPage = 0;
+    } else if (loadMore) {
+      if (provider.pageData != null && !provider.pageData!.last) {
+        _currentPage++;
+      } else {
+        return;
+      }
     }
     if (loadMore && !refresh) setState(() { _isLoadingMore = true; });
     await provider.fetchProducts(
@@ -210,7 +214,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
                                 displayImageUrl = backendBaseUrl + product.imageUrl!;
                               } else {
                                 // Nếu product.imageUrl chỉ là "puma_rsx.jpg"
-                                displayImageUrl = backendBaseUrl + "/images/products/" + product.imageUrl!;
+                                displayImageUrl = "$backendBaseUrl/images/products/${product.imageUrl!}";
                               }
                               // print("Constructed Image URL: $displayImageUrl"); // Thêm dòng này để debug
                             }

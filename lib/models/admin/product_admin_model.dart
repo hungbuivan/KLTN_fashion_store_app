@@ -7,12 +7,12 @@ class ProductAdminModel {
   final double? price;
   final int? stock;
   final int? categoryId;
-  // final String? categoryName; // Có thể thêm nếu backend trả về và bạn muốn hiển thị
+  final String? categoryName; // Có thể thêm nếu backend trả về và bạn muốn hiển thị
   final int? brandId;
-  // final String? brandName; // Có thể thêm
+  final String? brandName; // Có thể thêm
   final String? imageUrl;
   final bool? isPopular;
-  // final bool? isFavorite; // Xem xét có cần ở đây không
+  final bool? isFavorite; // Xem xét có cần ở đây không
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -23,12 +23,12 @@ class ProductAdminModel {
     this.price,
     this.stock,
     this.categoryId,
-    // this.categoryName,
+     this.categoryName,
     this.brandId,
-    // this.brandName,
+    this.brandName,
     this.imageUrl,
     this.isPopular,
-    // this.isFavorite,
+    this.isFavorite,
     this.createdAt,
     this.updatedAt,
   });
@@ -41,12 +41,12 @@ class ProductAdminModel {
       price: (json['price'] as num?)?.toDouble(),
       stock: json['stock'] as int?,
       categoryId: json['categoryId'] as int?,
-      // categoryName: json['categoryName'] as String?,
+      categoryName: json['categoryName'] as String?,
       brandId: json['brandId'] as int?,
-      // brandName: json['brandName'] as String?,
+      brandName: json['brandName'] as String?,
       imageUrl: json['imageUrl'] as String?,
       isPopular: json['isPopular'] as bool?,
-      // isFavorite: json['isFavorite'] as bool?,
+      isFavorite: json['isFavorite'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
     );
