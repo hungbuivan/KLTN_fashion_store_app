@@ -1,4 +1,3 @@
-import 'package:fashion_store_app/widgets/navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:fashion_store_app/widgets/all_product.dart';
 import 'package:fashion_store_app/widgets/popular_selection.dart';
@@ -30,6 +29,7 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 20),
                 PopularSection(),
                 AllProducts(),
+                const SizedBox(height: 20),
                // NavigationMenu()
               ],
             ),

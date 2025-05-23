@@ -49,7 +49,7 @@ class OnboardingScreen extends StatelessWidget {
                     effect: WormEffect( // Hiệu ứng cho dấu chấm (có nhiều loại khác)
                       dotHeight: 10.0,
                       dotWidth: 10.0,
-                      activeDotColor: Theme.of(context).colorScheme.primary, // Màu dấu chấm hiện tại
+                      activeDotColor: Colors.blue.shade500, // Màu dấu chấm hiện tại
                       dotColor: Colors.blue.shade300,                     // Màu dấu chấm không hiện tại
                     ),
                     onDotClicked: (index) { // Cho phép nhấn vào dấu chấm để chuyển trang
@@ -77,7 +77,7 @@ class OnboardingScreen extends StatelessWidget {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue, // Màu nút
+                        backgroundColor: Colors.blue.shade600, // Màu nút
                         foregroundColor: Colors.white, // Màu chữ trên nút
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25.0), // Bo góc nút
@@ -103,7 +103,7 @@ class OnboardingScreen extends StatelessWidget {
                       child: Text(
                         "Skip",
                         style: TextStyle(
-                          color: Colors.blue[700],
+                          color: Colors.blue.shade600,
                           fontSize: 16,
                         ),
                       ),

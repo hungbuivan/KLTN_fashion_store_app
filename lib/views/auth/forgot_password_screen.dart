@@ -94,6 +94,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
+                  Image.asset(
+                    'assets/images/forgot_password.png', // 👈 THAY BẰNG ĐƯỜNG DẪN ẢNH CỦA BẠN
+                    // height: 150, // Điều chỉnh kích thước
+                    errorBuilder: (ctx, err, st) => Icon(Iconsax.box_remove, size: 100, color: Colors.grey[400]), // Fallback
+                  ),
+                  const SizedBox(height: 24),
                   const Text(
                     "Forgot Password?",
                     textAlign: TextAlign.center,
@@ -105,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 15),
                   const Text(
-                    "Enter your email address below, and if an account exists, we'll send you a code to reset your password.",
+                    "Nhập email đăng kí tài khoản của bạn, chúng tôi sẽ gửi một mã OTP tới email đó!.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,

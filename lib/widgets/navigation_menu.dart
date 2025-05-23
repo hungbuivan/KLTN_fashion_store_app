@@ -1,9 +1,9 @@
 import 'package:fashion_store_app/screens/cart_page.dart';
+import 'package:fashion_store_app/screens/wishlist_screen.dart';
 import 'package:flutter/material.dart';
 import 'app_bottom_nav_bar.dart'; // nhớ import
 import '../screens/category_page.dart';
 import '../screens/home_page.dart';
-import '../screens/wishlist_page.dart';
 import '../screens/account_page.dart';
 
 
@@ -45,7 +45,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
       HomePage(),
       CategoryPage(),
       CartPage(),
-      WishlistPage(),
+      WishlistScreen(),
       AccountPage(),
     ];
   }

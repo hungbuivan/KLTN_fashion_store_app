@@ -1,14 +1,15 @@
+// file: lib/widgets/all_product.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 
-// Đảm bảo đường dẫn này ĐÚNG tới file model PopularItem của bạn
-// Nếu PopularItem.dart nằm trong thư mục con của widgets, ví dụ: widgets/models/popular_item.dart
-// thì import '../widgets/models/popular_item.dart';
-// Hoặc nếu nó ở cùng cấp với all_product.dart trong một thư mục screens chẳng hạn:
-// import '../models/popular_item.dart'; // Giả sử models là thư mục ngang cấp với screens
-import '../models/popular_item.dart';
-import 'navigation_menu.dart'; // Giữ nguyên nếu đường dẫn này đúng
+import '../models/popular_item.dart'; // Hoặc model sản phẩm chung của bạn
+import '../providers/auth_provider.dart';
+import '../providers/wishlist_provider.dart';
+import '../providers/cart_provider.dart'; // ✅ Import CartProvider
+import 'package:fashion_store_app/utils/formatter.dart';
 
 class AllProducts extends StatefulWidget {
   const AllProducts({super.key});
@@ -29,236 +30,220 @@ class _AllProductsState extends State<AllProducts> {
   }
 
   Future<void> _fetchAllItems() async {
-    // URL API để lấy tất cả sản phẩm
-    final url = Uri.parse('http://10.0.2.2:8080/api/products'); // Đảm bảo endpoint này đúng
+    final url = Uri.parse('http://10.0.2.2:8080/api/products');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final response = await http.get(url);
-      if (response.statusCode == 200) {
-        List<dynamic> jsonData = jsonDecode(response.body);
+      if (mounted) {
+        if (response.statusCode == 200) {
+          final List<dynamic> jsonData = jsonDecode(utf8.decode(response.bodyBytes));
+          final List<PopularItem?> tempList = jsonData
+              .map((itemJson) => PopularItem.fromJson(itemJson as Map<String, dynamic>))
+              .toList();
+          setState(() {
+            _allItems = tempList.whereType<PopularItem>().toList();
+            _isLoading = false;
+          });
+          print("AllProducts: Đã parse và lọc được ${_allItems.length} sản phẩm.");
+        } else {
+          setState(() {
+            _errorMessage = 'Failed to load products. Status code: ${response.statusCode} - ${response.body}';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _allItems = jsonData.map((itemJson) => PopularItem.fromJson(itemJson)).toList();
-          _isLoading = false;
-          _errorMessage = null; // Xóa lỗi nếu thành công
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load products. Status code: ${response.statusCode} from ${url.toString()}';
+          _errorMessage = 'Error fetching products: $e';
           _isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error fetching products: $e from ${url.toString()}';
-        _isLoading = false;
-      });
+      print("AllProducts: Lỗi fetchAllItems: $e");
     }
   }
-  // --- SỬA HÀM NÀY ĐỂ ĐỔI "localhost:8080" THÀNH "10.0.2.2:8080" ---
+
   String fixImageUrl(String? originalUrlFromApi) {
-    // Kiểm tra nếu originalUrlFromApi là null hoặc rỗng
+    const String imageBaseUrl = 'http://10.0.2.2:8080/images/products/';
     if (originalUrlFromApi == null || originalUrlFromApi.isEmpty) {
-      print("fixImageUrl: Received null or empty URL, returning empty.");
-      return ''; // Trả về chuỗi rỗng hoặc một URL placeholder mặc định
+      return '';
     }
-
-    String correctedUrl = originalUrlFromApi;
-
-    // Bước 1: Thay thế "localhost:8080" bằng "10.0.2.2:8080" nếu có
-    if (correctedUrl.contains('://localhost:8080')) {
-      print("fixImageUrl: Found 'localhost:8080' in $correctedUrl. Replacing...");
-      correctedUrl = correctedUrl.replaceFirst('://localhost:8080', '://10.0.2.2:8080');
-      print("fixImageUrl: Corrected URL is now $correctedUrl");
+    if (originalUrlFromApi.startsWith('http://') || originalUrlFromApi.startsWith('https://')) {
+      if (originalUrlFromApi.contains('://localhost:8080')) {
+        return originalUrlFromApi.replaceFirst('://localhost:8080', '://10.0.2.2:8080');
+      }
+      return originalUrlFromApi;
     }
-
-    // Bước 2: (Fallback) Nếu URL sau khi sửa (hoặc URL gốc) vẫn không bắt đầu bằng "http"
-    // (ví dụ: backend chỉ trả về tên file như "nike_tshirt.jpg")
-    // thì mới ghép với base URL đầy đủ.
-    // Nếu backend đã trả về URL đầy đủ (dù là localhost hay 10.0.2.2),
-    // thì bước này sẽ không cần thiết sau khi bước 1 đã chạy.
-    if (!correctedUrl.toLowerCase().startsWith('http')) {
-      print("fixImageUrl: URL '$correctedUrl' does not start with http. Prepending base path...");
-      // Giả định ảnh sản phẩm nằm trong images/products/
-      correctedUrl = 'http://10.0.2.2:8080/images/products/$correctedUrl';
-      print("fixImageUrl: Final URL for filename is $correctedUrl");
-    }
-
-    return correctedUrl;
+    return imageBaseUrl + originalUrlFromApi;
   }
-  // --- KẾT THÚC SỬA HÀM ---
-
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()));
     }
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.red), textAlign: TextAlign.center,));
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 16), textAlign: TextAlign.center),
+      ));
     }
     if (_allItems.isEmpty) {
       return const Center(child: Text('No products found.'));
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                Text(
-                  "All product",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NavigationMenu(selectedIndex: 1), // Mở Categories
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "View All",
-                    style: TextStyle(fontSize: 16, color: Colors.blue),
-                  ),
-                ),
-
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 16.0, bottom: 8.0),
+              child: Text(
+                "All Products",
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0), // Thêm padding vertical
-            child: GridView.builder(
+            GridView.builder(
+              padding: const EdgeInsets.all(8.0),
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.65, // Điều chỉnh tỉ lệ này nếu cần để vừa vặn hơn
+                mainAxisSpacing: 12.0,
+                crossAxisSpacing: 12.0,
+                childAspectRatio: 0.60,
               ),
               itemCount: _allItems.length,
               itemBuilder: (context, index) {
-                return _buildItemCard(_allItems[index]);
+                final item = _allItems[index];
+                return _buildProductItemCard(context, item);
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildItemCard(PopularItem item) {
-    // --- CÁC LỆNH PRINT ĐỂ DEBUG ---
-    print('AllProducts - Rendering item: ${item.name}');
-    print('AllProducts - Raw imageUrl from API: ${item.imageUrl}');
+  Widget _buildProductItemCard(BuildContext context, PopularItem item) {
+    final authProvider = context.watch<AuthProvider>();
+    final wishlistProvider = context.watch<WishlistProvider>();
+    final cartProviderActions = context.read<CartProvider>(); // ✅ Lấy CartProvider actions
 
-    // Xử lý imageUrl, truyền chuỗi rỗng nếu item.imageUrl là null để tránh lỗi
-    final String finalImageUrl = fixImageUrl(item.imageUrl ?? '');
-    print('AllProducts - Final imageUrl for Image.network: $finalImageUrl');
-    // --- KẾT THÚC PHẦN DEBUG ---
+    int currentProductId = -1;
+    bool canInteract = false;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15), // Giảm bo góc một chút
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch để ClipRRect chiếm full width
-        children: [
-          // Ảnh sản phẩm
-          Expanded( // Cho phép ảnh chiếm không gian linh hoạt
-            flex: 3, // Ảnh chiếm nhiều không gian hơn
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-              child: finalImageUrl.isEmpty // Kiểm tra nếu URL rỗng thì hiển thị placeholder
-                  ? Container(
-                color: Colors.grey[200],
-                child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
-              )
-                  : Image.network(
-                finalImageUrl,
-                fit: BoxFit.cover,
-                // --- THÊM LOADINGBUILDER VÀ ERRORBUILDER ---
-                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  );
-                },
-                errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-                  print('AllProducts - Error loading image $finalImageUrl: $error');
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Icon(Icons.broken_image, color: Colors.red, size: 40),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Tên, giá, nút
-          Expanded( // Phần thông tin chiếm không gian còn lại
-            flex: 2, // Thông tin chiếm ít không gian hơn ảnh
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 4.0, bottom: 4.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Căn đều không gian
-                crossAxisAlignment: CrossAxisAlignment.start,
+    // Đảm bảo item.id là int. Nếu PopularItem.id của bạn là String, bạn cần parse.
+    // Ví dụ: currentProductId = int.tryParse(item.id.toString()) ?? -1;
+    // Hiện tại, giả sử item.id đã là int hoặc có thể ép kiểu trực tiếp.
+    if (item.id is String) {
+      currentProductId = int.tryParse(item.id as String) ?? -1;
+    } else {
+      currentProductId = (item.id as num).toInt();
+    }
+  
+    canInteract = currentProductId != -1;
+  
+    final bool isCurrentlyFavorite = canInteract
+        ? wishlistProvider.isProductInWishlist(currentProductId)
+        : false;
+
+    return GestureDetector(
+      onTap: () {
+        if (!canInteract) { /* ... (xử lý ID không hợp lệ) ... */ return; }
+        Navigator.pushNamed(
+          context,
+          '/product-detail',
+          arguments: {'productId': currentProductId},
+        );
+      },
+      child: Card(
+        elevation: 2,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Stack(
+                alignment: Alignment.topRight,
                 children: [
-                  Text(
-                    item.name ?? 'No Name', // Xử lý null cho tên
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    maxLines: 2, // Cho phép 2 dòng
-                    overflow: TextOverflow.ellipsis,
+                  Positioned.fill(
+                    child: (item.imageUrl.isNotEmpty)
+                        ? Image.network( /* ... (Image.network như cũ) ... */ fixImageUrl(item.imageUrl), fit: BoxFit.cover, errorBuilder: (ctx, err, st) => Container(color: Colors.grey[200], child: Icon(Iconsax.gallery_slash, color: Colors.grey[400], size: 30)), loadingBuilder: (ctx, child, progress) { if (progress == null) return child; return Center(child: CircularProgressIndicator(strokeWidth: 2, value: progress.expectedTotalBytes != null ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes! : null)); },)
+                        : Container(color: Colors.grey[200], child: Icon(Iconsax.gallery_add, color: Colors.grey[400], size: 40)),
                   ),
-                  Text(
-                    // ignore: unnecessary_null_comparison
-                    item.price != null ? "\$${item.price.toStringAsFixed(2)}" : "N/A", // Xử lý null cho giá
-                    style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox( // Bọc ElevatedButton trong SizedBox để kiểm soát kích thước tốt hơn nếu cần
-                    width: double.infinity, // Cho nút chiếm hết chiều rộng
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        print('Add to cart ${item.name}');
-                      },
-                      icon: const Icon(Icons.add_shopping_cart, size: 16),
-                      label: const Text('Add', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Giảm vùng chạm
-                      ),
-                    ),
-                  ),
+                  Material(
+                    color: Colors.transparent,
+                    child: IconButton( /* ... (Nút Yêu thích như cũ, sử dụng currentProductId) ... */ icon: Icon(isCurrentlyFavorite ? Iconsax.heart5 : Iconsax.heart, color: isCurrentlyFavorite ? Colors.redAccent : Colors.black54, shadows: const [Shadow(color: Colors.white54, blurRadius: 4)],), iconSize: 22, splashRadius: 18, tooltip: isCurrentlyFavorite ? 'Xóa khỏi Yêu thích' : 'Thêm vào Yêu thích', onPressed: !canInteract ? null : () async { if (authProvider.isGuest) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập để sử dụng chức năng này.'))); return; } final wishlistActions = context.read<WishlistProvider>(); if (isCurrentlyFavorite) { await wishlistActions.removeFromWishlist(currentProductId); } else { await wishlistActions.addToWishlist(currentProductId); } },),
+                  )
                 ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.name ?? 'Sản phẩm', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5), maxLines: 2, overflow: TextOverflow.ellipsis,),
+                    Text(item.price != null ? currencyFormatter.format(item.price) : "N/A", style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 14),),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 36,
+                      child: ElevatedButton.icon(
+                        // ✅ CẬP NHẬT onPressed CHO NÚT ADD TO CART
+                        onPressed: !canInteract ? null : () async {
+                          if (authProvider.isGuest) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.')),
+                            );
+                            // TODO: Cân nhắc điều hướng đến trang đăng nhập
+                            // Navigator.pushNamed(context, '/login_input');
+                            return;
+                          }
+
+                          // Gọi hàm thêm vào giỏ hàng từ CartProvider
+                          // Giả sử thêm 1 sản phẩm mỗi lần nhấn
+                          final success = await cartProviderActions.addItemToCart(currentProductId, 1);
+
+                          if (context.mounted) {
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Đã thêm "${item.name}" vào giỏ hàng!'), backgroundColor: Colors.green, duration: const Duration(seconds: 1)),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(cartProviderActions.errorMessage ?? 'Lỗi khi thêm vào giỏ hàng.'), backgroundColor: Colors.redAccent),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Iconsax.shopping_bag, size: 16),
+                        label: const Text('Add', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[800],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -17,6 +17,18 @@ class ApiService {
     }
   }
 
+
+  static Future<Product> fetchProductById(int id) async {
+    final response = await http.get(Uri.parse('$baseUrl/$id'));
+
+    if (response.statusCode == 200) {
+      return Product.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load product');
+    }
+  }
+
+
   // 🆕 Thêm hàm này để gọi /popular
   static Future<List<Product>> fetchPopularProducts() async {
     final response = await http.get(Uri.parse('$baseUrl/popular'));

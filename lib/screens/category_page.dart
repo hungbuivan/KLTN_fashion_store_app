@@ -35,7 +35,7 @@ class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // 2 tabs: Products, Categories
+    _tabController = TabController(length: 2, vsync: this); // 2 tabs: Products, Categories
   }
 
   @override
@@ -85,7 +85,7 @@ class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderSt
                     tabs: const [
                       Tab(text: 'Products'),
                       Tab(text: 'Categories'),
-                      Tab(text: 'Brands'),
+
                     ],
                   ),
                 ),

@@ -43,7 +43,7 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
       );
       // Điều hướng về màn hình đăng nhập và xóa tất cả các route trước đó khỏi stack.
       // Đảm bảo '/login_input' (hoặc tên route màn hình đăng nhập của bạn) đã được định nghĩa.
-      Navigator.of(context).pushNamedAndRemoveUntil('/login_input', (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } else if (context.mounted && provider.message != null) {
       // Hiển thị lỗi nếu đặt lại mật khẩu thất bại
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +74,7 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
       backgroundColor: kPrimaryScreenColor,
       appBar: AppBar(
         title: const Text(
-          "Đặt Mật khẩu Mới",
+          "Reset Password!",
           style: TextStyle(color: kTextColor, fontSize: 18, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.transparent, // Nền trong suốt
@@ -91,7 +91,7 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
               Navigator.pushReplacementNamed(context, '/login');
             },
             child: Text(
-              "Hủy",
+              "Close",
               style: TextStyle(color: kAppBarActionColor, fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
@@ -101,13 +101,19 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(25.0), // Giảm padding một chút
+            padding: const EdgeInsets.all(20.0), // Giảm padding một chút
             child: Form(
               key: provider.resetPasswordFormKey, // Sử dụng key từ provider
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch, // Các nút sẽ chiếm hết chiều rộng
                 children: <Widget>[
+                  Image.asset(
+                    'assets/images/reset_password.png', // 👈 THAY BẰNG ĐƯỜNG DẪN ẢNH CỦA BẠN
+                     //height: 150, // Điều chỉnh kích thước
+                    errorBuilder: (ctx, err, st) => Icon(Iconsax.box_remove, size: 100, color: Colors.grey[400]), // Fallback
+                  ),
+                  const SizedBox(height: 10),
                   Text(
                     "Xác thực Tài khoản", // Tiêu đề chính
                     textAlign: TextAlign.center,
