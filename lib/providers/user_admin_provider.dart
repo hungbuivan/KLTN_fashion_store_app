@@ -195,6 +195,7 @@ class UserAdminProvider with ChangeNotifier {
           page: _pageData?.number ?? 0,
           size: _pageData?.size ?? 10,
           sort: _pageData != null && _pageData!.content.isNotEmpty ? (_currentSortFromPageData() ?? 'id,asc') : 'id,asc',
+          searchTerm: _pageData != null ? (_currentSearchTermFromPageData()) : null,
         );
       } else {
         try {
