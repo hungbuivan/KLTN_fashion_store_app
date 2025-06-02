@@ -1,4 +1,5 @@
-// file: main.dart
+// file: lib/main.dart
+import 'package:fashion_store_app/providers/address_provider.dart';
 import 'package:fashion_store_app/providers/bottom_nav_provider.dart';
 import 'package:fashion_store_app/providers/cart_provider.dart';
 import 'package:fashion_store_app/providers/dashboard_provider.dart';
@@ -10,6 +11,8 @@ import 'package:fashion_store_app/providers/stats_provider.dart';
 import 'package:fashion_store_app/providers/user_admin_provider.dart';
 import 'package:fashion_store_app/providers/wishlist_provider.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
+import 'package:fashion_store_app/screens/cart_page.dart';
+import 'package:fashion_store_app/screens/checkout_screen.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
@@ -22,22 +25,20 @@ import 'package:fashion_store_app/screens/wishlist_screen.dart';
 // Import các provider của bạn
 import 'providers/auth_provider.dart';
 import 'providers/onboarding_provider.dart';
+import 'providers/order_provider.dart'; // ✅ 1. IMPORT ORDERPROVIDER
+import 'providers/voucher_provider.dart'; // Đảm bảo VoucherProvider đã được import nếu OrderProvider dùng
 
 // Import các màn hình của bạn
+import 'screens/welcome_screen.dart'; // Ví dụ, bạn sẽ cần màn hình này
+// import 'screens/order_history_screen.dart'; // Sẽ tạo sau
+// import 'screens/order_detail_screen.dart';  // Sẽ tạo sau
 
-import 'screens/welcome_screen.dart'; // ✅ Màn hình Welcome (từ image_c13881.png)
-// ✅ Màn hình nhập liệu Login (tên mới)
-// import 'screens/signup_screen.dart'; // Nếu có
 
-// Không cần biến global _hasSeenOnboardingGlobal nữa
-// bool _hasSeenOnboardingGlobal = false;
 final storage = FlutterSecureStorage();
-// Hàm main không cần async nếu không đọcFuture<void>redPrefeasync rences ở đây
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Vẫn cần thiết
-  // Không đọc SharedPreferences ở đây nữa
 
-  await storage.deleteAll();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // await storage.deleteAll(); // Cẩn thận khi dùng deleteAll() ở đây
   runApp(const MyApp());
 }
 
@@ -51,126 +52,110 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => SignupProvider()),
+        ChangeNotifierProvider(create: (_) => AddressProvider()),
         ChangeNotifierProvider(create: (_) => ProductAdminProvider()),
         ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
         ChangeNotifierProvider(create: (_) => UserAdminProvider()),
         ChangeNotifierProvider(create: (_) => StatsProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => BottomNavProvider()),
+        // ProductDetailProvider được cung cấp 2 lần, bạn có thể bỏ 1 dòng nếu chúng giống hệt nhau
+        ChangeNotifierProvider(create: (_) => ProductDetailProvider()),
 
 
         ChangeNotifierProxyProvider<AuthProvider, WishlistProvider>(
-          // Hàm create tạo một instance ban đầu của WishlistProvider.
-          // Nó nhận AuthProvider (lấy bằng Provider.of với listen: false vì đây là lúc tạo).
           create: (context) => WishlistProvider(Provider.of<AuthProvider>(context, listen: false)),
-
-          // Hàm update được gọi mỗi khi AuthProvider (dependency) thay đổi.
-          // Nó nhận AuthProvider mới (auth) và WishlistProvider cũ (previousWishlist).
           update: (context, auth, previousWishlist) {
-            // Nếu previousWishlist là null (lần đầu tạo proxy), tạo mới.
             if (previousWishlist == null) return WishlistProvider(auth);
-
-            // Kiểm tra xem trạng thái đăng nhập trong AuthProvider có thay đổi không.
-            // Ví dụ: nếu người dùng vừa đăng nhập hoặc đăng xuất.
-            if (auth.isAuthenticated && (previousWishlist.authProvider.user?.id != auth.user?.id || !previousWishlist.authProvider.isAuthenticated) ) {
-              // Người dùng vừa đăng nhập hoặc user thay đổi
-              print("Main.dart: Auth state changed to authenticated or user changed. Fetching wishlist.");
-              previousWishlist.fetchWishlist(); // Tải lại wishlist cho user mới
-            } else if (!auth.isAuthenticated && previousWishlist.authProvider.isAuthenticated) {
-              // Người dùng vừa đăng xuất
-              print("Main.dart: Auth state changed to unauthenticated. Clearing wishlist.");
-              previousWishlist.clearWishlistOnLogout(); // Xóa dữ liệu wishlist ở client
-            }
-            // Trả về instance WishlistProvider (có thể là cũ hoặc mới nếu bạn muốn tạo lại)
-            // Ở đây, chúng ta cập nhật trên instance cũ.
+            previousWishlist.updateAuthProvider(auth);
             return previousWishlist;
           },
-
-
         ),
-        ChangeNotifierProvider(create: (_) => ProductDetailProvider()),
-        // ✅ THÊM CARTPROVIDER VÀO ĐÂY
+
         ChangeNotifierProxyProvider<AuthProvider, CartProvider>(
           create: (context) => CartProvider(Provider.of<AuthProvider>(context, listen: false)),
           update: (context, auth, previousCart) {
             if (previousCart == null) return CartProvider(auth);
-            // Xử lý thay đổi trạng thái đăng nhập
-            // (Bạn có thể cần một hàm updateAuthProvider trong CartProvider tương tự như WishlistProvider)
-            previousCart.updateAuthProvider(auth); // Giả sử có hàm này
+            previousCart.updateAuthProvider(auth);
             return previousCart;
           },
         ),
 
+        ChangeNotifierProxyProvider<AuthProvider, VoucherProvider>( // VoucherProvider cần AuthProvider
+            create: (context) => VoucherProvider(Provider.of<AuthProvider>(context, listen: false)),
+            update: (context, auth, previousVoucher) {
+              if (previousVoucher == null) return VoucherProvider(auth);
+              previousVoucher.updateAuthProvider(auth); // Đảm bảo VoucherProvider có hàm này
+              return previousVoucher;
+            }
+        ),
 
-
-        // Thêm các provider khác nếu cần, ví dụ SignupProvider
-        // ChangeNotifierProvider(create: (_) => SignupProvider()),
-        ChangeNotifierProvider(create: (_) => ProductDetailProvider()),
+        // ✅ 2. CUNG CẤP ORDERPROVIDER
+        // OrderProvider phụ thuộc vào AuthProvider, CartProvider, và VoucherProvider
+        ChangeNotifierProxyProvider3<AuthProvider, CartProvider, VoucherProvider, OrderProvider>(
+          create: (context) => OrderProvider(
+            authProvider: Provider.of<AuthProvider>(context, listen: false),
+            cartProvider: Provider.of<CartProvider>(context, listen: false),
+            voucherProvider: Provider.of<VoucherProvider>(context, listen: false),
+          ),
+          update: (context, auth, cart, voucher, previousOrder) {
+            if (previousOrder == null) {
+              return OrderProvider(authProvider: auth, cartProvider: cart, voucherProvider: voucher);
+            }
+            previousOrder.updateAuthProvider(auth); // Đảm bảo OrderProvider có hàm này
+            // Bạn có thể thêm logic để OrderProvider phản ứng với thay đổi của CartProvider hoặc VoucherProvider nếu cần
+            // previousOrder.updateCartProvider(cart); // Ví dụ
+            // previousOrder.updateVoucherProvider(voucher); // Ví dụ
+            return previousOrder;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Fashion Store',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade700), // Sử dụng màu seed nhất quán
           useMaterial3: true,
           fontFamily: 'Poppins',
-
         ),
-        // ✅ Luôn bắt đầu với màn hình onboarding
-        // Thay đổi:
-        initialRoute: '/onboarding', // <- Đây là màn hình quyết định đầu tiên
-
+        initialRoute: '/onboarding',
         routes: {
-
           '/onboarding': (context) => const OnboardingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
-          '/login': (context) => const LoginScreen(),
+          '/login': (context) => const LoginScreen(), // Đảm bảo LoginScreen được import đúng
           '/signup': (context) => const SignupScreen(),
           '/home': (context) => const NavigationMenu(),
           '/admin_panel': (context) => const AdminHomePage(),
           '/wishlist': (context) => const WishlistScreen(),
+          '/checkout': (context) => const CheckoutScreen(),
+          //CheckoutScreen.routeName: (context) => const CheckoutScreen(), // Ví dụ nếu CheckoutScreen có routeName
+          // '/cart': (context) => const CartPage(), // Nếu bạn đã có CartPage
         },
-
-
-        // ✅ Sử dụng onGenerateRoute để xử lý các route có tham số động
-        // như ProductDetailScreen
         onGenerateRoute: (settings) {
-          print("Navigate to: ${settings.name}"); // Log để debug route
+          print("Navigate to: ${settings.name}");
 
-          // Xử lý route cho ProductDetailScreen
           if (settings.name == '/product-detail') {
-            // Lấy arguments được truyền vào (dưới dạng Map)
             final args = settings.arguments as Map<String, dynamic>?;
-
             if (args != null && args.containsKey('productId')) {
               final productId = args['productId'];
-              // Kiểm tra kiểu dữ liệu của productId
               if (productId is int) {
                 return MaterialPageRoute(
                   builder: (context) {
-                    // Khởi tạo ProductDetailScreen với productId
                     return ProductDetailScreen(productId: productId);
                   },
                 );
-              } else {
-                print("Lỗi: productId không phải là kiểu int. Giá trị nhận được: $productId");
-                // Trả về trang lỗi nếu productId không đúng kiểu
-                return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Product ID không hợp lệ (kiểu dữ liệu sai).'))));
               }
             }
-            // Trả về một trang lỗi nếu productId không được cung cấp
-            print("Lỗi: Product ID không được cung cấp cho route /product-detail.");
-            return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Product ID không được cung cấp.'))));
+            return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Product ID không hợp lệ'))));
           }
+          // Thêm onGenerateRoute cho CartPage nếu nó nhận arguments hoặc để nhất quán
+          if (settings.name == '/cart') {
+            return MaterialPageRoute(builder: (context) => const CartPage());
+          }
+          // TODO: Xử lý onGenerateRoute cho OrderHistoryScreen, OrderDetailScreen (nếu chúng nhận arguments)
 
-          // Xử lý các route động khác nếu có
-          // ...
-
-          // Nếu không có route nào khớp, có thể trả về null để fallback về onUnknownRoute
-          // hoặc trả về một trang lỗi mặc định
-          print("Route không được định nghĩa: ${settings.name}");
-          return MaterialPageRoute(builder: (_) => Scaffold(body: Center(child: Text('Lỗi 404: Trang không tồn tại - ${settings.name}'))));
+          return MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text("Lỗi")),body: Center(child: Text('Lỗi 404: Trang không tồn tại - ${settings.name}'))));
         },
       ),
     );

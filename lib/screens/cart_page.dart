@@ -329,9 +329,7 @@ class _CartPageState extends State<CartPage> {
             child: ElevatedButton(
               onPressed: () {
                 print('Tiến hành Thanh toán - Tổng tiền: ${cart.cartTotalPrice}');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Chức năng Thanh toán đang được phát triển!')),
-                );
+                Navigator.pushReplacementNamed(context, '/checkout');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
