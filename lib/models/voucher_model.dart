@@ -20,9 +20,9 @@ class VoucherModel {
   final DateTime? endDate; // Ngày kết thúc hiệu lực
   final bool isActive; // Voucher có đang hoạt động không
   // Các trường khác bạn có thể muốn thêm từ VoucherDTO backend:
-  // final int? usageLimitPerVoucher;
-  // final int? usageLimitPerUser;
-  // final int currentUsageCount;
+  final int? usageLimitPerVoucher;
+   final int? usageLimitPerUser;
+   final int currentUsageCount;
 
   VoucherModel({
     this.id,
@@ -35,9 +35,9 @@ class VoucherModel {
     this.startDate,
     this.endDate,
     required this.isActive,
-    // this.usageLimitPerVoucher,
-    // this.usageLimitPerUser,
-    // required this.currentUsageCount,
+    this.usageLimitPerVoucher,
+     this.usageLimitPerUser,
+     required this.currentUsageCount,
   });
 
   factory VoucherModel.fromJson(Map<String, dynamic> json) {
@@ -79,9 +79,9 @@ class VoucherModel {
       endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate']) : null,
       // Backend có thể trả về 'active' hoặc 'isActive'. Ưu tiên 'active', fallback về 'isActive'
       isActive: json['active'] as bool? ?? json['isActive'] as bool? ?? false,
-      // usageLimitPerVoucher: _parseInt(json['usageLimitPerVoucher']),
-      // usageLimitPerUser: _parseInt(json['usageLimitPerUser']),
-      // currentUsageCount: _parseInt(json['currentUsageCount']) ?? 0,
+       usageLimitPerVoucher: _parseInt(json['usageLimitPerVoucher']),
+       usageLimitPerUser: _parseInt(json['usageLimitPerUser']),
+       currentUsageCount: _parseInt(json['currentUsageCount']) ?? 0,
     );
   }
 

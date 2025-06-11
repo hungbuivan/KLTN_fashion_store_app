@@ -9,11 +9,15 @@ import 'package:fashion_store_app/providers/product_detail_provider.dart';
 import 'package:fashion_store_app/providers/signup_provider.dart';
 import 'package:fashion_store_app/providers/stats_provider.dart';
 import 'package:fashion_store_app/providers/user_admin_provider.dart';
+import 'package:fashion_store_app/providers/voucher_admin_provider.dart';
 import 'package:fashion_store_app/providers/wishlist_provider.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
 import 'package:fashion_store_app/screens/cart_page.dart';
 import 'package:fashion_store_app/screens/checkout_screen.dart';
+import 'package:fashion_store_app/screens/edit_profile_screen.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
+import 'package:fashion_store_app/screens/order_history_screen.dart';
+import 'package:fashion_store_app/screens/order_success_screen.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
 import 'package:fashion_store_app/views/home/product_details_screen.dart';
@@ -30,8 +34,8 @@ import 'providers/voucher_provider.dart'; // Đảm bảo VoucherProvider đã �
 
 // Import các màn hình của bạn
 import 'screens/welcome_screen.dart'; // Ví dụ, bạn sẽ cần màn hình này
-// import 'screens/order_history_screen.dart'; // Sẽ tạo sau
-// import 'screens/order_detail_screen.dart';  // Sẽ tạo sau
+import 'package:fashion_store_app/screens/order_detail_screen.dart';
+import 'package:fashion_store_app/screens/order_success_screen.dart';
 
 
 final storage = FlutterSecureStorage();
@@ -59,6 +63,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => StatsProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => BottomNavProvider()),
+        ChangeNotifierProvider(create: (_) => VoucherAdminProvider()),
         // ProductDetailProvider được cung cấp 2 lần, bạn có thể bỏ 1 dòng nếu chúng giống hệt nhau
         ChangeNotifierProvider(create: (_) => ProductDetailProvider()),
 
@@ -131,6 +136,9 @@ class MyApp extends StatelessWidget {
           '/checkout': (context) => const CheckoutScreen(),
           //CheckoutScreen.routeName: (context) => const CheckoutScreen(), // Ví dụ nếu CheckoutScreen có routeName
           // '/cart': (context) => const CartPage(), // Nếu bạn đã có CartPage
+          OrderHistoryScreen.routeName: (context) => const OrderHistoryScreen(), // Đăng ký route tĩnh
+          EditProfileScreen.routeName: (context) => const EditProfileScreen(),
+
         },
         onGenerateRoute: (settings) {
           print("Navigate to: ${settings.name}");
@@ -154,6 +162,34 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (context) => const CartPage());
           }
           // TODO: Xử lý onGenerateRoute cho OrderHistoryScreen, OrderDetailScreen (nếu chúng nhận arguments)
+          // ✅ THÊM LOGIC CHO /order-detail
+          if (settings.name == '/order-detail') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            if (args != null && args.containsKey('orderId')) {
+              final orderId = args['orderId'];
+              if (orderId is int) {
+                return MaterialPageRoute(
+                  builder: (context) => OrderDetailScreen(orderId: orderId),
+                  settings: settings, // ✅ Truyền settings để giữ lại tên route
+                );
+              }
+            }
+            return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Order ID không hợp lệ'))));
+          }
+
+          if (settings.name == '/order-success') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            if (args != null && args.containsKey('orderId')) {
+              final orderId = args['orderId'];
+              if (orderId is int) {
+                return MaterialPageRoute(
+                  builder: (context) => OrderDetailScreen(orderId: orderId),
+                  settings: settings, // ✅ Truyền settings để giữ lại tên route
+                );
+              }
+            }
+            return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Order ID không hợp lệ'))));
+          }
 
           return MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text("Lỗi")),body: Center(child: Text('Lỗi 404: Trang không tồn tại - ${settings.name}'))));
         },

@@ -20,7 +20,8 @@ import '../models/shipping_address_model.dart';
 
 // Import formatter
 import '../utils/formatter.dart';
-import '../widgets/applicable_voucher_item.dart'; // Đảm bảo đường dẫn này đúng
+import '../widgets/applicable_voucher_item.dart';
+import 'order_success_screen.dart'; // Đảm bảo đường dẫn này đúng
 
 // Import màn hình thành công (nếu có)
 // import 'order_success_screen.dart';
@@ -170,7 +171,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (authProvider.isGuest || authProvider.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng đăng nhập để đặt hàng.')));
       // TODO: Điều hướng đến trang đăng nhập
-      // Navigator.pushNamed(context, '/login_input');
+       Navigator.pushNamed(context, '/login');
       return;
     }
 
@@ -227,12 +228,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đặt hàng thành công! Mã đơn hàng: ${createdOrderDetail.orderId}'), backgroundColor: Colors.green),
         );
-        // TODO: Điều hướng đến trang OrderSuccessScreen hoặc OrderHistoryScreen
-        // Ví dụ: Navigator.of(context).pushReplacementNamed(OrderSuccessScreen.routeName, arguments: {'orderId': createdOrderDetail.orderId});
-        // Hiện tại, quay về trang chủ và chuyển sang tab đơn hàng (nếu có) hoặc tab home
-        context.read<BottomNavProvider>().changeTab(0); // Chuyển về tab Home
-        // Pop tất cả các màn hình hiện tại cho đến khi về màn hình Home (hoặc root)
-        Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/home');
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          OrderSuccessScreen.routeName, // Sử dụng routeName đã định nghĩa
+              (route) => route.settings.name == '/home' || route.isFirst, // Xóa các route cho đến khi gặp home hoặc root
+          arguments: {'orderId': createdOrderDetail.orderId}, // Truyền orderId
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(orderProvider.errorMessage ?? 'Đặt hàng thất bại. Vui lòng thử lại.'), backgroundColor: Colors.red),
@@ -423,7 +423,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Expanded(
               child: TextFormField(
                 controller: _voucherCodeController,
-                decoration: _inputDecoration('Nhập mã (nếu có)', prefixIcon: Iconsax.ticket_discount),
+                decoration: _inputDecoration('Nhập mã', prefixIcon: Iconsax.ticket_discount),
                 textCapitalization: TextCapitalization.characters,
                 onChanged: (value){
                   if(voucherProvider.appliedVoucherCode != null && voucherProvider.appliedVoucherCode != value.trim().toUpperCase()){

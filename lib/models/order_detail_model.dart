@@ -7,6 +7,7 @@ import 'shipping_address_model.dart';
 
 class OrderDetailModel {
   final int orderId;
+  final int userId;
   final String? userEmail;
   final String? userName; // Tên người đặt hàng
   final String? userPhone; // SĐT người đặt hàng
@@ -27,6 +28,7 @@ class OrderDetailModel {
 
   OrderDetailModel({
     required this.orderId,
+    required this.userId,
     this.userEmail,
     this.userName,
     this.userPhone,
@@ -94,6 +96,7 @@ class OrderDetailModel {
 
     return OrderDetailModel(
       orderId: _parseInt(json['orderId']) ?? 0, // Cần ID, nếu null thì là lỗi dữ liệu
+      userId: _parseInt(json['orderId']) ?? 0,
       userEmail: json['userEmail'] as String?,
       userName: json['userName'] as String?,
       userPhone: json['userPhone'] as String?,

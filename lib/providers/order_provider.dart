@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../models/order_detail_model.dart';
 import '../models/order_summary_model.dart';
 // import '../models/cart_item_model.dart'; // Chỉ cần nếu CartItemInfoData không được định nghĩa bên dưới
+import '../models/page_response_model.dart';
 import '../models/shipping_address_model.dart';
 
 // Import các provider khác
@@ -61,13 +62,14 @@ class CartItemInfoData {
 
 
 class OrderProvider with ChangeNotifier {
-  final AuthProvider authProvider;
+  AuthProvider authProvider;
   final CartProvider cartProvider;
   final VoucherProvider voucherProvider;
 
   // Base URL cho API (thay đổi IP nếu cần)
   final String _baseUserSpecificOrderUrl = 'http://10.0.2.2:8080/api/users'; // Cho /users/{userId}/orders
   final String _baseGeneralOrderUrl = 'http://10.0.2.2:8080/api/orders';  // Cho /orders và /orders/{orderId}/...
+  final String _baseAdminOrderUrl = 'http://10.0.2.2:8080/api/admin/orders';
 
   List<OrderSummaryModel> _userOrders = [];
   List<OrderSummaryModel> get userOrders => _userOrders;
@@ -75,10 +77,12 @@ class OrderProvider with ChangeNotifier {
   OrderDetailModel? _currentOrderDetail;
   OrderDetailModel? get currentOrderDetail => _currentOrderDetail;
 
-  // --- Cho Admin ---
+  // ✅ PHẦN THÊM MỚI: State cho Admin
   List<OrderSummaryModel> _allAdminOrders = [];
   List<OrderSummaryModel> get allAdminOrders => _allAdminOrders;
-  // PageResponse<OrderSummaryModel>? _adminOrdersPageData; // Cân nhắc dùng model PageResponse<T> nếu có
+  PageResponse<OrderSummaryModel>? _adminOrdersPageData;
+  PageResponse<OrderSummaryModel>? get adminOrdersPageData => _adminOrdersPageData;
+  // --- KẾT THÚC PHẦN THÊM MỚI ---
 
   bool _isLoading = false; // Loading chung cho các thao tác chính
   bool get isLoading => _isLoading;
@@ -100,8 +104,9 @@ class OrderProvider with ChangeNotifier {
     // }
   }
 
-  void _setLoading(bool loading, {bool isStatusUpdateOperation = false}) {
-    if (isStatusUpdateOperation) {
+  // ✅ SỬA LỖI Ở ĐÂY: đổi tên tham số thành isStatusUpdate
+  void _setLoading(bool loading, {bool isStatusUpdate = false}) {
+    if (isStatusUpdate) {
       if (_isUpdatingStatus == loading) return;
       _isUpdatingStatus = loading;
     } else {
@@ -322,11 +327,11 @@ class OrderProvider with ChangeNotifier {
     if (authProvider.isGuest || authProvider.user == null) { _errorMessage = "Vui lòng đăng nhập."; notifyListeners(); return false; }
     final int userId = authProvider.user!.id; // Cần để gọi đúng API hoặc để backend xác thực
 
-    _setLoading(true, isStatusUpdateOperation: true);
+    _setLoading(true, isStatusUpdate: true);
     _clearError();
     bool success = false;
     try {
-      final url = Uri.parse('$_baseGeneralOrderUrl/$orderId/cancel-by-user');
+      final url = Uri.parse('$_baseGeneralOrderUrl/$orderId/cancel-by-user?userId=$userId');
       print("OrderProvider: User ID $userId cancelling order $orderId");
       final Map<String, String?> body = {};
       if (reason != null && reason.isNotEmpty) {
@@ -352,7 +357,7 @@ class OrderProvider with ChangeNotifier {
         _errorMessage = responseData['message'] as String? ?? "Lỗi hủy đơn hàng.";
       }
     } catch (e) { _errorMessage = "Lỗi kết nối khi hủy đơn: ${e.toString()}"; print("OrderProvider: Error cancelling order: $e"); }
-    _setLoading(false, isStatusUpdateOperation: true);
+    _setLoading(false, isStatusUpdate: true);
     return success;
   }
 
@@ -361,11 +366,11 @@ class OrderProvider with ChangeNotifier {
     if (authProvider.isGuest || authProvider.user == null) { _errorMessage = "Vui lòng đăng nhập."; notifyListeners(); return false; }
     final int userId = authProvider.user!.id; // Backend sẽ kiểm tra quyền
 
-    _setLoading(true, isStatusUpdateOperation: true);
+    _setLoading(true, isStatusUpdate: true);
     _clearError();
     bool success = false;
     try {
-      final url = Uri.parse('$_baseGeneralOrderUrl/$orderId/confirm-delivery');
+      final url = Uri.parse('$_baseGeneralOrderUrl/$orderId/confirm-delivery?userId=$userId');
       print("OrderProvider: User ID $userId confirming delivery for order $orderId");
 
       // API backend PUT /api/orders/{orderId}/confirm-delivery không yêu cầu body trong OrderController hiện tại
@@ -382,55 +387,171 @@ class OrderProvider with ChangeNotifier {
         _errorMessage = responseData['message'] as String? ?? "Lỗi xác nhận nhận hàng.";
       }
     } catch (e) { _errorMessage = "Lỗi kết nối khi xác nhận: ${e.toString()}"; print("OrderProvider: Error confirming delivery: $e");}
-    _setLoading(false, isStatusUpdateOperation: true);
+    _setLoading(false, isStatusUpdate: true);
     return success;
   }
 
-  // === ADMIN FUNCTIONS === (Sẽ được phát triển sau)
-  Future<void> fetchAllOrdersForAdmin({Pageable? pageable}) async {
-    // TODO: Implement logic for admin to fetch all orders
-    _setLoading(true);
-    _clearError();
-    await Future.delayed(const Duration(seconds: 1)); // Giả lập gọi API
-    _allAdminOrders = []; // Gán rỗng hoặc dữ liệu mẫu
-    print("OrderProvider (Admin): Fetched all orders (placeholder).");
-    _setLoading(false);
-  }
-
-  Future<bool> updateAdminOrderStatus(int orderId, String newStatus, {String? reason, String? trackingNumber}) async {
-    // TODO: Implement logic for admin to update order status
-    _setLoading(true, isStatusUpdateOperation: true);
-    _clearError();
-    await Future.delayed(const Duration(seconds: 1));
-    print("OrderProvider (Admin): Updated order $orderId status to $newStatus (placeholder). Reason: $reason, Tracking: $trackingNumber");
-    // Giả sử thành công, tải lại danh sách (hoặc chỉ cập nhật item đó)
-    // await fetchAllOrdersForAdmin();
-    if (_currentOrderDetail?.orderId == orderId) {
-      // await fetchOrderDetailForAdmin(orderId); // Cần hàm riêng cho admin
+  // ✅ PHẦN THÊM MỚI: CÁC HÀM CHO ADMIN
+  /**
+   * Admin: Lấy tất cả đơn hàng với phân trang, sắp xếp và lọc (nếu có)
+   */
+  Future<void> fetchAllOrdersForAdmin({
+    int page = 0,
+    int size = 15,
+    String sort = 'createdAt,desc',
+    String? status, // Thêm filter theo trạng thái
+    String? searchTerm, // Thêm tìm kiếm theo mã đơn hoặc tên user
+  }) async {
+    if (authProvider.isGuest || authProvider.user?.role != 'admin') {
+      _errorMessage = "Không có quyền truy cập.";
+      notifyListeners();
+      return;
     }
-    _setLoading(false, isStatusUpdateOperation: true);
-    return true; // Giả sử thành công
+
+    _isLoading = true;
+    _errorMessage = null;
+    if (page == 0) {
+      notifyListeners();
+    }
+
+    try {
+      final queryParams = {
+        'page': page.toString(),
+        'size': size.toString(),
+        'sort': sort,
+      };
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+      if (searchTerm != null && searchTerm.isNotEmpty) {
+        queryParams['searchTerm'] = searchTerm;
+      }
+
+      final uri = Uri.parse(_baseAdminOrderUrl).replace(queryParameters: queryParams);
+      print("OrderProvider (Admin): Fetching all orders from: $uri");
+
+      final response = await http.get(uri, headers: await _getAuthHeaders());
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        _adminOrdersPageData = PageResponse.fromJson(responseData, (json) => OrderSummaryModel.fromJson(json));
+
+        if (page == 0) {
+          _allAdminOrders = _adminOrdersPageData!.content;
+        } else {
+          _allAdminOrders.addAll(_adminOrdersPageData!.content);
+        }
+        _errorMessage = null;
+      } else {
+        _errorMessage = "Lỗi tải đơn hàng (Admin): ${response.statusCode} - ${response.body}";
+        if (page == 0) _allAdminOrders = [];
+        _adminOrdersPageData = null;
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối khi tải đơn hàng (Admin): ${e.toString()}";
+      if (page == 0) _allAdminOrders = [];
+      _adminOrdersPageData = null;
+      print("OrderProvider (Admin): Error fetching orders: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
+  /**
+   * Admin: Cập nhật trạng thái của một đơn hàng
+   */
+  Future<bool> updateAdminOrderStatus(
+      int orderId, String newStatus, {String? reason, String? trackingNumber}) async {
 
-  // Được gọi bởi ChangeNotifierProxyProvider khi AuthProvider thay đổi
+    if (authProvider.isGuest || authProvider.user?.role != 'admin') {
+      _errorMessage = "Không có quyền truy cập.";
+      notifyListeners();
+      return false;
+    }
+
+    _setLoading(true, isStatusUpdate: true);
+    _clearError();
+    bool success = false;
+
+    try {
+      final url = Uri.parse('$_baseAdminOrderUrl/$orderId/status');
+      final Map<String, String?> body = {
+        'newStatus': newStatus,
+        if (reason != null) 'cancelReason': reason,
+        if (trackingNumber != null) 'trackingNumber': trackingNumber,
+      };
+
+      print("OrderProvider (Admin): Updating order $orderId to status $newStatus");
+      final response = await http.put(url, headers: await _getAuthHeaders(), body: jsonEncode(body));
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        final updatedOrderDetail = OrderDetailModel.fromJson(responseData as Map<String, dynamic>);
+        _updateOrderInLists(updatedOrderDetail);
+        success = true;
+      } else {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        _errorMessage = responseData['message'] as String? ?? "Lỗi cập nhật trạng thái.";
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối khi cập nhật trạng thái: ${e.toString()}";
+    }
+
+    _setLoading(false, isStatusUpdate: true);
+    return success;
+  }
+
+  // ✅ PHẦN THÊM MỚI: Hàm helper để cập nhật một đơn hàng trong các danh sách hiện có
+  void _updateOrderInLists(OrderDetailModel updatedOrder) {
+    // Chuyển đổi OrderDetailModel sang OrderSummaryModel để cập nhật danh sách
+    final summaryToUpdate = OrderSummaryModel(
+        orderId: updatedOrder.orderId,
+        orderDate: updatedOrder.orderDate,
+        firstProductImageUrl: updatedOrder.items.isNotEmpty ? updatedOrder.items.first.productImageUrl : null,
+        firstProductNameOrItemCount: updatedOrder.items.isNotEmpty ? (updatedOrder.items.length > 1 ? '${updatedOrder.items.first.productName} và ${updatedOrder.items.length - 1} sản phẩm khác' : updatedOrder.items.first.productName) : 'Đơn hàng trống',
+        totalQuantityOfItems: updatedOrder.items.fold(0, (sum, item) => sum + item.quantity),
+        totalAmount: updatedOrder.totalAmount,
+        status: updatedOrder.status,
+        customerName: updatedOrder.userName,
+        customerEmail: updatedOrder.userEmail,
+        appliedVoucherCode: updatedOrder.appliedVoucherCode,
+        voucherDiscountAmount: updatedOrder.voucherDiscountAmount
+    );
+
+    // Cập nhật trong danh sách admin
+    int adminIndex = _allAdminOrders.indexWhere((order) => order.orderId == updatedOrder.orderId);
+    if (adminIndex != -1) {
+      _allAdminOrders[adminIndex] = summaryToUpdate;
+    }
+
+    // Cập nhật trong danh sách user (nếu user hiện tại là người đặt đơn đó)
+    if (authProvider.user?.id == updatedOrder.userId) { // Giả sử OrderDetailModel có userId
+      int userIndex = _userOrders.indexWhere((order) => order.orderId == updatedOrder.orderId);
+      if (userIndex != -1) {
+        _userOrders[userIndex] = summaryToUpdate;
+      }
+    }
+
+    // Cập nhật chi tiết đơn hàng hiện tại nếu đang xem
+    if (_currentOrderDetail?.orderId == updatedOrder.orderId) {
+      _currentOrderDetail = updatedOrder;
+    }
+
+    notifyListeners();
+  }
+
+  // ✅ CẬP NHẬT: Hàm updateAuthProvider để reset cả danh sách admin
   void updateAuthProvider(AuthProvider newAuth) {
-    bool wasAuthenticated = authProvider.isAuthenticated;
-    // authProvider = newAuth; // Không gán lại final field, proxy provider sẽ tạo instance mới nếu cần
-
-    if (!newAuth.isAuthenticated && wasAuthenticated) {
-      // User vừa đăng xuất
+    if (!newAuth.isAuthenticated && authProvider.isAuthenticated) {
       _userOrders = [];
       _currentOrderDetail = null;
-      _allAdminOrders = []; // Cũng clear đơn hàng của admin
+      _allAdminOrders = [];
+      _adminOrdersPageData = null;
       _errorMessage = null;
-      _isLoading = false; // Đảm bảo reset loading
+      _isLoading = false;
       notifyListeners();
-      print("OrderProvider: User logged out, cleared order data.");
-    } else if (newAuth.isAuthenticated && (!wasAuthenticated || authProvider.user?.id != newAuth.user?.id) && newAuth.user != null) {
-      // User vừa đăng nhập HOẶC user thay đổi (ít xảy ra nếu chỉ có 1 user login)
-      print("OrderProvider: User authenticated or changed. Fetching user orders.");
-      fetchUserOrders(); // Tải đơn hàng cho user mới/vừa đăng nhập
+      print("OrderProvider: User logged out, cleared all order data.");
     }
   }
 
