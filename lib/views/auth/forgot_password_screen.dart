@@ -77,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
-              "Close",
+              "Đóng",
               style: TextStyle(color: kAppBarActionColor, fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
@@ -101,7 +101,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    "Forgot Password?",
+                    "Bạn quên mật khẩu?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 28,
@@ -111,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 15),
                   const Text(
-                    "Nhập email đăng kí tài khoản của bạn, chúng tôi sẽ gửi một mã OTP tới email đó!.",
+                    "Nhập email đăng ký tài khoản của bạn, chúng tôi sẽ gửi một mã OTP tới email đó!.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -121,7 +121,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 40),
                   Text(
-                    "EMAIL ADDRESS", // "New Email" trong thiết kế có vẻ là label
+                    "Địa chỉ email đăng ký", // "New Email" trong thiết kế có vẻ là label
                     style: TextStyle(
                         color: Colors.grey[700],
                         fontSize: 12,
@@ -132,7 +132,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: provider.emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: "Enter your email",
+                      hintText: "Nhập email",
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -187,7 +187,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text("Reset Password", style: TextStyle(color: Colors.white)),
+                    child: const Text("Gửi mã OTP", style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),

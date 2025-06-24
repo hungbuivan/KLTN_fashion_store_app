@@ -77,6 +77,50 @@ class OrderProvider with ChangeNotifier {
   OrderDetailModel? _currentOrderDetail;
   OrderDetailModel? get currentOrderDetail => _currentOrderDetail;
 
+  //phân trang
+  int _currentPage = 0;
+  bool _hasNextPage = true;
+
+  int get currentPage => _currentPage;
+  bool get hasNextPage => _hasNextPage;
+
+
+
+  // Lấy chi tiết một đơn hàng cho Admin
+  Future<OrderDetailModel?> fetchOrderDetailForAdmin(int orderId) async {
+    if (authProvider.isGuest || authProvider.user?.role != 'admin') {
+      _errorMessage = "Không có quyền truy cập.";
+      notifyListeners();
+      return null;
+    }
+
+    _setLoading(true);
+    _clearError();
+    _currentOrderDetail = null; // Xóa chi tiết cũ
+    OrderDetailModel? fetchedOrder;
+
+    try {
+      // API: GET /api/admin/orders/{orderId}
+      final url = Uri.parse('$_baseAdminOrderUrl/$orderId');
+      print("OrderProvider (Admin): Fetching order detail from $url");
+
+      final response = await http.get(url, headers: await _getAuthHeaders());
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        fetchedOrder = OrderDetailModel.fromJson(responseData as Map<String, dynamic>);
+        _currentOrderDetail = fetchedOrder;
+      } else {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        _errorMessage = responseData['message'] as String? ?? "Lỗi tải chi tiết đơn hàng (Admin): ${response.statusCode}";
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối khi lấy chi tiết đơn hàng (Admin).";
+      print("OrderProvider (Admin): Error fetching order detail: $e");
+    }
+    _setLoading(false);
+    return fetchedOrder;
+  }
+
   // ✅ PHẦN THÊM MỚI: State cho Admin
   List<OrderSummaryModel> _allAdminOrders = [];
   List<OrderSummaryModel> get allAdminOrders => _allAdminOrders;
@@ -141,6 +185,7 @@ class OrderProvider with ChangeNotifier {
     required String paymentMethod,
     required double shippingFee,
     String? voucherCode,
+    required String initialStatus,
   }) async {
     if (authProvider.isGuest || authProvider.user == null) {
       _errorMessage = "Vui lòng đăng nhập để đặt hàng.";
@@ -196,10 +241,10 @@ class OrderProvider with ChangeNotifier {
         'cartItems': orderPayload.cartItems.map((item) => item.toJson()).toList(),
         'shippingAddress': orderPayload.shippingAddress.toJson(),
         'paymentMethod': orderPayload.paymentMethod,
+        'status': initialStatus, // Gửi trạng thái ban đầu lên backend
         if (orderPayload.shippingFee != null) 'shippingFee': orderPayload.shippingFee,
         if (orderPayload.voucherCode != null && orderPayload.voucherCode!.isNotEmpty) 'voucherCode': orderPayload.voucherCode,
       };
-
 
       final url = Uri.parse('$_baseGeneralOrderUrl');
       print("OrderProvider: Creating order to $url with data: ${jsonEncode(finalPayloadJson)}");
@@ -217,8 +262,8 @@ class OrderProvider with ChangeNotifier {
         // Backend trả về OrderDetailDTO
         createdOrder = OrderDetailModel.fromJson(responseData as Map<String, dynamic>);
 
-        await cartProvider.clearCart(); // Xóa giỏ hàng ở client và có thể gọi API backend
-        voucherProvider.removeAppliedVoucher(); // Reset voucher đã áp dụng ở client
+        // await cartProvider.clearCart(); // Xóa giỏ hàng ở client và có thể gọi API backend
+        // voucherProvider.removeAppliedVoucher(); // Reset voucher đã áp dụng ở client
 
         await fetchUserOrders(); // Tải lại lịch sử đơn hàng của user
         _currentOrderDetail = createdOrder; // Lưu chi tiết đơn vừa tạo (tùy chọn)
@@ -236,15 +281,20 @@ class OrderProvider with ChangeNotifier {
   }
 
   // Lấy lịch sử đơn hàng của người dùng hiện tại
-  Future<void> fetchUserOrders({int page = 0, int size = 10, String sort = "createdAt,desc"}) async {
+  Future<void> fetchUserOrders({
+    int page = 0,
+    int size = 10,
+    String sort = "createdAt,desc",
+    bool isRefresh = false,
+  }) async {
     if (authProvider.isGuest || authProvider.user == null) {
       _userOrders = [];
       notifyListeners();
       return;
     }
-    final int userId = authProvider.user!.id;
 
-    _setLoading(true);
+    final int userId = authProvider.user!.id;
+    if (page == 0) _setLoading(true); // Chỉ show loading nếu là trang đầu
     _clearError();
 
     try {
@@ -253,7 +303,9 @@ class OrderProvider with ChangeNotifier {
         'size': size.toString(),
         'sort': sort,
       };
-      final url = Uri.parse('$_baseUserSpecificOrderUrl/$userId/orders').replace(queryParameters: queryParams);
+
+      final url = Uri.parse('$_baseUserSpecificOrderUrl/$userId/orders')
+          .replace(queryParameters: queryParams);
       print("OrderProvider: Fetching user orders from $url");
 
       final response = await http.get(url, headers: await _getAuthHeaders());
@@ -262,28 +314,52 @@ class OrderProvider with ChangeNotifier {
         final responseBody = utf8.decode(response.bodyBytes);
         final decodedData = jsonDecode(responseBody);
 
-        if (decodedData is Map && decodedData.containsKey('content') && decodedData['content'] is List) {
+        if (decodedData is Map &&
+            decodedData.containsKey('content') &&
+            decodedData['content'] is List) {
           final List<dynamic> ordersData = decodedData['content'];
           final List<OrderSummaryModel?> tempList = ordersData
-              .map((data) => OrderSummaryModel.fromJson(data as Map<String, dynamic>))
+              .map((data) =>
+              OrderSummaryModel.fromJson(data as Map<String, dynamic>))
               .toList();
-          _userOrders = tempList.whereType<OrderSummaryModel>().toList();
-          // TODO: Cập nhật thông tin phân trang nếu cần (ví dụ: _userOrdersPageData)
+
+          final List<OrderSummaryModel> newOrders =
+          tempList.whereType<OrderSummaryModel>().toList();
+
+          if (isRefresh || page == 0) {
+            _userOrders = newOrders;
+          } else {
+            _userOrders.addAll(newOrders);
+          }
+
+          // ✅ Cập nhật phân trang
+          _currentPage = decodedData['number'] ?? page;
+
+          // ✅ Sửa chỗ lỗi: kiểm tra trường 'last' là bool
+          if (decodedData.containsKey('last') && decodedData['last'] is bool) {
+            _hasNextPage = !(decodedData['last'] as bool);
+          } else {
+            _hasNextPage = false; // fallback an toàn
+          }
         } else {
-          _errorMessage = "Dữ liệu lịch sử đơn hàng không hợp lệ.";
-          _userOrders = [];
+          _errorMessage = "Dữ liệu đơn hàng không hợp lệ.";
+          if (isRefresh || page == 0) _userOrders = [];
         }
       } else {
-        _errorMessage = "Lỗi tải lịch sử đơn hàng: ${response.statusCode} - ${response.body}";
-        _userOrders = [];
+        _errorMessage =
+        "Lỗi tải lịch sử đơn hàng: ${response.statusCode} - ${response.body}";
+        if (isRefresh || page == 0) _userOrders = [];
       }
     } catch (e) {
-      _errorMessage = "Lỗi kết nối khi tải lịch sử đơn hàng: ${e.toString()}";
-      _userOrders = [];
+      _errorMessage = "Lỗi kết nối khi tải đơn hàng: ${e.toString()}";
+      if (isRefresh || page == 0) _userOrders = [];
       print("OrderProvider: Error fetching user orders: $e");
     }
+
     _setLoading(false);
   }
+
+
 
   // Lấy chi tiết một đơn hàng của người dùng hiện tại
   Future<OrderDetailModel?> fetchOrderDetailForUser(int orderId) async {

@@ -88,7 +88,7 @@ class OnboardingScreen extends StatelessWidget {
                         ),
                       ),
                       // Thay đổi text của nút tùy theo trang hiện tại
-                      child: Text(onboardingProvider.isLastPage ? "Get Started" : "Next"),
+                      child: Text(onboardingProvider.isLastPage ? "Bắt đầu mua sắm" : "Tiếp"),
                     ),
                   ),
                   const SizedBox(height: 15.0),
@@ -101,7 +101,7 @@ class OnboardingScreen extends StatelessWidget {
                         onboardingProviderActions.completeOnboardingAndGoToWelcome(context);
                       },
                       child: Text(
-                        "Skip",
+                        "Bỏ qua",
                         style: TextStyle(
                           color: Colors.blue.shade600,
                           fontSize: 16,

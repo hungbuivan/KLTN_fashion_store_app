@@ -121,7 +121,11 @@ class _AdminVoucherManagementPageState extends State<AdminVoucherManagementPage>
       builder: (context, provider, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text("Quản lý Mã giảm giá"),
+
+              title: const Text("Quản lý mã giảm giá"),
+              centerTitle: true,
+              backgroundColor: Colors.blue,
+
             actions: [
               PopupMenuButton<String>(
                 icon: const Icon(Iconsax.sort),
@@ -150,8 +154,16 @@ class _AdminVoucherManagementPageState extends State<AdminVoucherManagementPage>
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => _navigateToAddEditScreen(),
             tooltip: 'Tạo Voucher Mới',
-            icon: const Icon(Iconsax.add),
-            label: const Text("Tạo mới"),
+            icon: const Icon(
+              Iconsax.add,
+              color: Colors.white,
+            ),
+            label: const Text(
+              "Thêm mới",
+              style: TextStyle(color: Colors.white),
+            ),
+
+            backgroundColor:Colors.blue,
           ),
         );
       },

@@ -14,25 +14,21 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SizedBox(
-          width: width(context),
-          height: height(context),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppHeader(),
-                SearchArea(),
-                CategoriesPart(),
-                const SizedBox(height: 10),
-                BannerSlider(),
-                const SizedBox(height: 20),
-                PopularSection(),
-                AllProducts(),
-                const SizedBox(height: 20),
-               // NavigationMenu()
-              ],
-            ),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppHeader(),
+              SearchArea(),
+              CategoriesPart(),
+              const SizedBox(height: 10),
+              BannerSlider(),
+              const SizedBox(height: 20),
+              PopularSection(), // <-- phần có thể scroll ngang
+              AllProducts(), // <-- không cuộn riêng nữa
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),

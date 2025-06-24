@@ -37,9 +37,9 @@ class LoginScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text("Login", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),),
+                      Text("Đăng nhập", style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),),
                       SizedBox(height: 10,),
-                      Text("Welcome back", style: TextStyle(color: Colors.white, fontSize: 18),),
+                      Text("Chào mừng trở lại!", style: TextStyle(color: Colors.white, fontSize: 18),),
                     ],
                   ),
                 ),
@@ -81,7 +81,7 @@ class LoginScreen extends StatelessWidget {
                                         // ✅ SỬA Ở ĐÂY:
                                         controller: authProvider.emailController, // Đổi từ emailOrPhoneController
                                         decoration: const InputDecoration(
-                                            hintText: "Email", // Có thể đổi hintText nếu chỉ chấp nhận email
+                                            hintText: "Email của bạn", // Có thể đổi hintText nếu chỉ chấp nhận email
                                             hintStyle: TextStyle(color: Colors.grey),
                                             border: InputBorder.none
                                         ),
@@ -103,7 +103,7 @@ class LoginScreen extends StatelessWidget {
                                         controller: authProvider.passwordController,
                                         obscureText: authProvider.hidePassword,
                                         decoration: InputDecoration(
-                                          hintText: "Password",
+                                          hintText: "Mật khẩu",
                                           hintStyle: const TextStyle(color: Colors.grey),
                                           border: InputBorder.none,
                                           suffixIcon: IconButton(
@@ -135,7 +135,7 @@ class LoginScreen extends StatelessWidget {
                                       MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
                                     );
                                   },
-                                  child: const Text("Forgot Password?", style: TextStyle(color: Colors.grey),)
+                                  child: const Text("Bạn quên mật khẩu?", style: TextStyle(color: Colors.grey),)
                               ),
                               const SizedBox(height: 30,),
                               authProvider.isLoading
@@ -167,11 +167,11 @@ class LoginScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(50),
                                 ),
                                 child: const Center(
-                                  child: Text("Login", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),),
+                                  child: Text("Đăng nhập", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),),
                                 ),
                               ),
                               const SizedBox(height: 40,),
-                              const Text("Continue with social media", style: TextStyle(color: Colors.grey),),
+                              const Text("Tiêp tục với", style: TextStyle(color: Colors.grey),),
                               const SizedBox(height: 30,),
                               Row(
                                 children: <Widget>[

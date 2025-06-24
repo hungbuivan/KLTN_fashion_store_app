@@ -176,12 +176,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        "Create Account", // Tiêu đề
+                        "Tạo tài khoản mới", // Tiêu đề
                         style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        "Join us and start your fashion journey!", // Mô tả ngắn
+                        "Đăng ký để trải nghiệm!", // Mô tả ngắn
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ],
@@ -224,7 +224,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 16),
                       TextFormField(controller: signupProvider.phoneController, decoration: _inputDecoration("Số điện thoại", Iconsax.call_calling, prefixIconColor: Colors.grey.shade700), keyboardType: TextInputType.phone),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(value: signupProvider.selectedGender, decoration: _inputDecoration("Giới tính", Iconsax.man, prefixIconColor: Colors.grey.shade700), items: [const DropdownMenuItem<String>(value: null, child: Text("Chọn giới tính (tùy chọn)")), const DropdownMenuItem<String>(value: 'male', child: Text("Nam")), const DropdownMenuItem<String>(value: 'female', child: Text("Nữ")), const DropdownMenuItem<String>(value: 'other', child: Text("Khác")),], onChanged: (String? newValue) => context.read<SignupProvider>().setSelectedGender(newValue)),
+                      DropdownButtonFormField<String>(value: signupProvider.selectedGender, decoration: _inputDecoration("Giới tính", Iconsax.man, prefixIconColor: Colors.grey.shade700), items: [const DropdownMenuItem<String>(value: null, child: Text("Giới tính")), const DropdownMenuItem<String>(value: 'male', child: Text("Nam")), const DropdownMenuItem<String>(value: 'female', child: Text("Nữ")), const DropdownMenuItem<String>(value: 'other', child: Text("Khác")),], onChanged: (String? newValue) => context.read<SignupProvider>().setSelectedGender(newValue)),
                       const SizedBox(height: 24),
 
                       const Text("Địa chỉ nhận hàng", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
@@ -301,14 +301,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         child: signupProvider.isLoading || addressProvider.isLoadingProvinces || addressProvider.isLoadingDistricts || addressProvider.isLoadingWards
                             ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.blue, strokeWidth: 2.5))
-                            : Text("Sign Up", style: TextStyle(color: Colors.white)),
+                            : Text("Đăng ký", style: TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(height: 24),
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Already have an account? ", style: TextStyle(color: Colors.grey[700])),
+                          Text("Bạn đã có tài khoản ", style: TextStyle(color: Colors.grey[700])),
                           GestureDetector(
                             onTap: () {
                               if (Navigator.canPop(context)) {
@@ -318,7 +318,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               }
                             },
                             child: Text(
-                              "Login",
+                              "Đăng nhập",
                               style: TextStyle(color: primaryActionColor, fontWeight: FontWeight.bold),
                             ),
                           ),

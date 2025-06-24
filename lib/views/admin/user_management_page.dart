@@ -198,10 +198,15 @@ class _UserManagementPageState extends State<UserManagementPage> {
     return Consumer<UserAdminProvider>(
       builder: (context, provider, child) {
         return Scaffold( // Không cần FAB ở đây nếu không có chức năng "Thêm User" trực tiếp
+          appBar: AppBar(
+            title: const Text("Quản lý người dùng"),
+            centerTitle: true,
+            backgroundColor: Colors.blue,
+          ),
           body: Column(
             children: [
               // Thanh tìm kiếm và Lọc
-              const SizedBox(height: 35,),
+              // const SizedBox(height: 35,),
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Row(

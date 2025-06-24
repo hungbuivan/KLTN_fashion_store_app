@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import '../providers/bottom_nav_provider.dart';
 import 'order_detail_screen.dart';
+import 'order_history_screen.dart';
 // import 'order_detail_screen.dart'; // Để điều hướng đến chi tiết đơn hàng
 // import 'order_history_screen.dart'; // Để điều hướng đến lịch sử đơn hàng
 
@@ -70,16 +71,12 @@ class OrderSuccessScreen extends StatelessWidget {
               // Nút xem chi tiết đơn hàng
               ElevatedButton(
                 onPressed: () {
-                  // TODO: Điều hướng đến trang chi tiết đơn hàng
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                       builder: (ctx) => OrderDetailScreen(orderId: orderId),
-                     ),
-                   );
-
+                  // Thay thế màn hình hiện tại bằng màn hình Lịch sử đơn hàng
+                  // để người dùng không thể quay lại màn hình "Thành công" này
+                  Navigator.of(context).pushReplacementNamed( OrderHistoryScreen.routeName);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
+                  backgroundColor: Colors.blue,
                   foregroundColor: theme.colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -94,13 +91,13 @@ class OrderSuccessScreen extends StatelessWidget {
                 onPressed: () {
                   // Chuyển về tab Trang chủ và quay về màn hình Home
                   context.read<BottomNavProvider>().changeTab(0);
-                  Navigator.of(context).popUntil((route) => route.settings.name == '/home' || route.isFirst);
+                  Navigator.of(context).popUntil((route) => route.settings.name == '/home' );
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: Colors.grey.shade400),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
                 ),
                 child: const Text('Tiếp tục mua sắm'),
               ),

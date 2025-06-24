@@ -52,6 +52,12 @@ class ProductDetailProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final responseBody = utf8.decode(response.bodyBytes); // Xử lý tiếng Việt
         print("ProductDetailProvider: Phản hồi API chi tiết sản phẩm: $responseBody");
+        // ✅ THÊM DEBUG PRINT Ở ĐÂY
+        print("----------------------------------------------------");
+        print("DEBUG (ProductDetailProvider): RAW JSON RESPONSE:");
+        print(responseBody);
+        print("----------------------------------------------------");
+
         final Map<String, dynamic> decodedData = jsonDecode(responseBody);
         // ✅ Sử dụng ProductDetailModel.fromJson đã được đơn giản hóa
         _product = ProductDetailModel.fromJson(decodedData);

@@ -208,6 +208,18 @@ class _CartPageState extends State<CartPage> {
                     children: [
                       Text(item.productName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
+
+                      // ✅ THÊM WIDGET HIỂN THỊ SIZE/COLOR VÀO ĐÂY
+                      if ((item.size != null && item.size!.isNotEmpty) || (item.color != null && item.color!.isNotEmpty))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Text(
+                            // Ghép chuỗi, chỉ hiển thị phần có giá trị
+                            'Phân loại: ${item.color ?? ''}${ (item.color != null && item.size != null) ? ' / ' : '' }${item.size ?? ''}',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                          ),
+                        ),
+
                       Text(
                         item.productPrice != null ? currencyFormatter.format(item.productPrice) : 'N/A',
                         style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary),
@@ -274,24 +286,27 @@ class _CartPageState extends State<CartPage> {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                // ✅ Gọi BottomNavProvider để chuyển về tab Trang chủ (index 0)
-                context.read<BottomNavProvider>().changeTab(0);
-                // Nếu CartPage được push lên từ một màn hình không phải là HomePage (hoặc NavigationMenu)
-                // thì bạn có thể muốn pop trước khi changeTab, hoặc dùng pushReplacementNamed
-                if (ModalRoute.of(context)?.settings.name != '/home' && Navigator.canPop(context)) {
-                  Navigator.popUntil(context, ModalRoute.withName('/home'));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor,
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-              ),
-              child: const Text('Bắt đầu mua sắm', style: TextStyle(color: Colors.white)),
-            ),
+        ElevatedButton(
+          onPressed: () {
+            // Chuyển tab về Trang chủ (index 0)
+            context.read<BottomNavProvider>().changeTab(0);
+
+            // Điều hướng về màn hình home, xóa các route trước đó
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/home',
+                  (route) => false,
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+          ),
+          child: const Text('Bắt đầu mua sắm', style: TextStyle(color: Colors.white)),
+        ),
+
+
           ],
         ),
       ),

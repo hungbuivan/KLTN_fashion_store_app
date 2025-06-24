@@ -2,10 +2,14 @@
 import 'package:fashion_store_app/providers/address_provider.dart';
 import 'package:fashion_store_app/providers/bottom_nav_provider.dart';
 import 'package:fashion_store_app/providers/cart_provider.dart';
+import 'package:fashion_store_app/providers/category_provider.dart';
 import 'package:fashion_store_app/providers/dashboard_provider.dart';
 import 'package:fashion_store_app/providers/forgot_password_provider.dart';
+import 'package:fashion_store_app/providers/payment_provider.dart';
 import 'package:fashion_store_app/providers/product_admin_provider.dart';
 import 'package:fashion_store_app/providers/product_detail_provider.dart';
+import 'package:fashion_store_app/providers/product_provider.dart';
+import 'package:fashion_store_app/providers/products_by_category_provider.dart';
 import 'package:fashion_store_app/providers/signup_provider.dart';
 import 'package:fashion_store_app/providers/stats_provider.dart';
 import 'package:fashion_store_app/providers/user_admin_provider.dart';
@@ -18,6 +22,8 @@ import 'package:fashion_store_app/screens/edit_profile_screen.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/screens/order_history_screen.dart';
 import 'package:fashion_store_app/screens/order_success_screen.dart';
+import 'package:fashion_store_app/screens/product_screen.dart';
+import 'package:fashion_store_app/screens/products_by_category_screen.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
 import 'package:fashion_store_app/views/home/product_details_screen.dart';
@@ -66,6 +72,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VoucherAdminProvider()),
         // ProductDetailProvider được cung cấp 2 lần, bạn có thể bỏ 1 dòng nếu chúng giống hệt nhau
         ChangeNotifierProvider(create: (_) => ProductDetailProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ProductsByCategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
 
 
         ChangeNotifierProxyProvider<AuthProvider, WishlistProvider>(
@@ -114,6 +123,24 @@ class MyApp extends StatelessWidget {
             return previousOrder;
           },
         ),
+
+        ChangeNotifierProxyProvider<AuthProvider, PaymentProvider>(
+          create: (context) => PaymentProvider(
+            Provider.of<AuthProvider>(context, listen: false),
+          ),
+          update: (context, auth, previousPayment) {
+            if (previousPayment == null) return PaymentProvider(auth);
+            // Gọi hàm updateAuthProvider trong PaymentProvider nếu bạn có logic
+            // cần phản ứng với việc đăng nhập/đăng xuất.
+            // previousPayment.updateAuthProvider(auth);
+            return previousPayment;
+          },
+        ),
+
+
+
+
+
       ],
       child: MaterialApp(
         title: 'Fashion Store',
@@ -138,6 +165,7 @@ class MyApp extends StatelessWidget {
           // '/cart': (context) => const CartPage(), // Nếu bạn đã có CartPage
           OrderHistoryScreen.routeName: (context) => const OrderHistoryScreen(), // Đăng ký route tĩnh
           EditProfileScreen.routeName: (context) => const EditProfileScreen(),
+
 
         },
         onGenerateRoute: (settings) {
@@ -183,12 +211,36 @@ class MyApp extends StatelessWidget {
               final orderId = args['orderId'];
               if (orderId is int) {
                 return MaterialPageRoute(
-                  builder: (context) => OrderDetailScreen(orderId: orderId),
+                  builder: (context) => OrderSuccessScreen(orderId: orderId),
                   settings: settings, // ✅ Truyền settings để giữ lại tên route
                 );
               }
             }
             return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Order ID không hợp lệ'))));
+          }
+
+          // Thêm logic để xử lý route cho ProductsByCategoryScreen
+          if (settings.name == ProductsByCategoryScreen.routeName) {
+            final args = settings.arguments as Map<String, dynamic>?;
+
+            // Kiểm tra xem arguments có được truyền đúng không
+            if (args != null && args.containsKey('categoryId') && args.containsKey('categoryName')) {
+              final categoryId = args['categoryId'] as int;
+              final categoryName = args['categoryName'] as String;
+
+              return MaterialPageRoute(
+                builder: (context) {
+                  // Tạo màn hình với các tham số đã nhận
+                  return ProductsByCategoryScreen(
+                    categoryId: categoryId,
+                    categoryName: categoryName,
+                  );
+                },
+                settings: settings, // Giữ lại tên route và các thông tin khác
+              );
+            }
+            // Trả về trang lỗi nếu không có arguments
+            return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Thiếu thông tin danh mục'))));
           }
 
           return MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text("Lỗi")),body: Center(child: Text('Lỗi 404: Trang không tồn tại - ${settings.name}'))));

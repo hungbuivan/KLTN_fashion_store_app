@@ -75,7 +75,7 @@ class AppHeader extends StatelessWidget {
               children: [
                 // Hiển thị "Hello, [Tên User]"
                 Text(
-                  "Hello, $displayName!", // Sử dụng displayName đã được xác định
+                  "Xin chào, $displayName!", // Sử dụng displayName đã được xác định
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
@@ -86,7 +86,7 @@ class AppHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2), // Khoảng cách nhỏ
                 const Text(
-                  "Good day for shopping!", // Dòng chào phụ
+                  "Ngày tốt để mua sắm!", // Dòng chào phụ
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.black54,

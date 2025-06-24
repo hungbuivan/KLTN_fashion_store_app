@@ -108,10 +108,15 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
     return Consumer<ProductAdminProvider>(
       builder: (context, provider, child) {
         return Scaffold(
+          appBar: AppBar(
+            title: const Text("Quản lý sản phẩm"),
+            centerTitle: true,
+            backgroundColor: Colors.blue,
+          ),
           body: Column(
             children: [
               // ... (Phần Search và Sort giữ nguyên) ...
-              const SizedBox(height: 35),
+              // const SizedBox(height: 5),
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
@@ -292,9 +297,17 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
             // ... (FAB giữ nguyên) ...
             onPressed: () => _navigateToAddEditScreen(),
             tooltip: 'Thêm Sản phẩm Mới',
-            icon: const Icon(Iconsax.add),
-            label: const Text("Thêm mới"),
+            icon: const Icon(
+              Iconsax.add,
+              color: Colors.white,
+            ),
+            label: const Text(
+              "Thêm mới",
+              style: TextStyle(color: Colors.white),
+            ),
+
             backgroundColor:Colors.blue,
+
           ),
         );
       },

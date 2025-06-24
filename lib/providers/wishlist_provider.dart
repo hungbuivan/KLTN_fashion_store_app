@@ -261,6 +261,13 @@ class WishlistProvider with ChangeNotifier {
     // this.authProvider = newAuth; // Điều này sẽ yêu cầu authProvider không phải là final.
     // Hiện tại, chúng ta dựa vào việc constructor nhận AuthProvider đúng.
   }
+  Future<bool> toggleWishlistItem(int productId) async {
+    if (isProductInWishlist(productId)) {
+      return await removeFromWishlist(productId);
+    } else {
+      return await addToWishlist(productId);
+    }
+  }
 
   @override
   void dispose() {

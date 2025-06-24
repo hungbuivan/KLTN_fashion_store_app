@@ -10,7 +10,7 @@ class OrderSummaryModel {
   final double? totalAmount; // Tổng tiền cuối cùng của đơn hàng
   final String status;
   final String? customerName; // Tên khách hàng (cho Admin view)
-  final String? customerEmail; // Email khách hàng (cho Admin view, thêm vào DTO backend nếu cần)
+  final String? customerEmail; // Email khách hàng (cho Admin view)
   final String? appliedVoucherCode;
   final double? voucherDiscountAmount;
 
@@ -83,19 +83,18 @@ class OrderSummaryModel {
 
   // Getter tiện lợi để hiển thị trạng thái một cách thân thiện (tùy chọn)
   String get displayStatus {
-    // TODO: Map 'status' (PENDING, CONFIRMED, etc.) sang tiếng Việt hoặc text dễ hiểu hơn
-    // Ví dụ:
-    // switch (status.toUpperCase()) {
-    //   case 'PENDING': return 'Chờ xác nhận';
-    //   case 'CONFIRMED': return 'Đã xác nhận';
-    //   case 'PROCESSING': return 'Đang xử lý';
-    //   case 'SHIPPED': return 'Đang giao';
-    //   case 'DELIVERED': return 'Đã giao';
-    //   case 'COMPLETED': return 'Hoàn thành';
-    //   case 'CANCELLED_BY_USER': return 'Đã hủy bởi bạn';
-    //   case 'CANCELLED_BY_ADMIN': return 'Đã hủy bởi cửa hàng';
-    //   default: return status;
-    // }
-    return status; // Trả về trạng thái gốc nếu chưa map
+    // Logic map 'status' (PENDING, CONFIRMED, etc.) sang tiếng Việt
+    switch (status.toUpperCase()) {
+      case 'PENDING': return 'Chờ xác nhận';
+      case 'CONFIRMED': return 'Đã xác nhận';
+      case 'PROCESSING': return 'Đang xử lý';
+      case 'SHIPPED': return 'Đang giao';
+      case 'DELIVERED': return 'Đã giao';
+      case 'COMPLETED': return 'Hoàn thành';
+      case 'CANCELLED_BY_USER': return 'Đã hủy bởi bạn';
+      case 'CANCELLED_BY_ADMIN': return 'Đã hủy bởi cửa hàng';
+      case 'PAYMENT_FAILED': return 'Thanh toán thất bại';
+      default: return status;
+    }
   }
 }

@@ -45,10 +45,10 @@ class _CategoriesPartState extends State<CategoriesPart> {
   }
 }
 List categories= [
-  "All",
-  "Men",
-  "Women",
-  "Couple",
-  "Shoes",
-  "Bag"
+  "Tất cả",
+  "Nam",
+  "Nữ",
+  "Cặp đôi",
+  "Giày",
+  "Túi xách"
 ];

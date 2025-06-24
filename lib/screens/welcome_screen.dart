@@ -54,7 +54,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: screenSize.height * 0.04),
                   const Text(
-                    "Hello",
+                    "Xin chào",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 36,
@@ -95,7 +95,7 @@ class WelcomeScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      child: const Text("Login", style: TextStyle(color: Colors.white)),
+                      child: const Text("Đăng nhập", style: TextStyle(color: Colors.white)),
                     ),
                   ),
                   SizedBox(height: screenSize.height * 0.02),
@@ -118,12 +118,12 @@ class WelcomeScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      child: const Text("Sign Up", style: TextStyle(color: Colors.blue)),
+                      child: const Text("Đăng ký", style: TextStyle(color: Colors.blue)),
                     ),
                   ),
                   SizedBox(height: screenSize.height * 0.04),
                   const Text(
-                    "Sign up using",
+                    "Đăng nhập với",
                     style: TextStyle(
                       fontSize: 14,
                       color: kSocialLoginTextColor,

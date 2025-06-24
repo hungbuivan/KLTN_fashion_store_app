@@ -10,6 +10,8 @@ class CartItemModel {
   final double? itemTotalPrice; // Tổng tiền cho item này
   final DateTime? addedAt;
   final DateTime? updatedAt;
+  final String? color;
+  final String? size;
 
   CartItemModel({
     required this.cartItemId,
@@ -21,6 +23,8 @@ class CartItemModel {
     this.itemTotalPrice,
     this.addedAt,
     this.updatedAt,
+    this.color,
+    this.size,
   });
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +55,8 @@ class CartItemModel {
       itemTotalPrice: parseDouble(json['itemTotalPrice']),
       addedAt: json['addedAt'] != null ? DateTime.tryParse(json['addedAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+      color: json['color'] as String?,
+      size: json['size'] as String?,
     );
   }
 }

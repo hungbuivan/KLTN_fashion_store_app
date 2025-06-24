@@ -19,11 +19,11 @@ class AppBottomNavBar extends StatelessWidget {
       selectedIndex: selectedIndex,
       onDestinationSelected: onDestinationSelected,
       destinations: const [
-        NavigationDestination(icon: Icon(Iconsax.home), label: "Home"),
-        NavigationDestination(icon: Icon(Iconsax.category), label: "Categories"),
-        NavigationDestination(icon: Icon(Iconsax.card_tick), label: "Cart"),
-        NavigationDestination(icon: Icon(Iconsax.heart), label: "Wishlist"),
-        NavigationDestination(icon: Icon(Iconsax.user), label: "Profile"),
+        NavigationDestination(icon: Icon(Iconsax.home), label: "Trang chủ"),
+        NavigationDestination(icon: Icon(Iconsax.category), label: "Danh mục"),
+        NavigationDestination(icon: Icon(Iconsax.card_tick), label: "Giỏ hàng"),
+        NavigationDestination(icon: Icon(Iconsax.heart), label: "Yêu thích"),
+        NavigationDestination(icon: Icon(Iconsax.user), label: "Tài khoản"),
       ],
     );
   }

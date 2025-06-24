@@ -26,7 +26,7 @@ class AccountPage extends StatelessWidget {
     if (originalUrlFromApi.startsWith('/')) {
       return serverBase + originalUrlFromApi;
     }
-    return '$serverBase/images/avatars/$originalUrlFromApi'; // Giả sử path cho avatar
+    return '$serverBase/images/avatar/$originalUrlFromApi'; // Giả sử path cho avatar
   }
 
   @override
@@ -76,7 +76,7 @@ class AccountPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user.fullName ?? 'Chưa có tên',
+                            user.fullName ,
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -162,7 +162,7 @@ class AccountPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Đăng nhập để quản lý tài khoản, xem lịch sử đơn hàng và nhận nhiều ưu đãi hơn!',
+                'Đăng nhập để quản lý tài khoản, xem lịch sử đơn hàng và nhận nhiều ưu đãi!',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
@@ -173,7 +173,7 @@ class AccountPage extends StatelessWidget {
                   Navigator.of(context).pushNamed('/login');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),

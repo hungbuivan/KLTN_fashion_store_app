@@ -23,7 +23,7 @@ class SearchArea extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide.none
                     ),
-                    hintText: "Search"    ,
+                    hintText: "Tìm kiếm"    ,
                     prefixIcon: Icon(Icons.search),
                   ),
                 ),

@@ -51,7 +51,12 @@ class ProductAdminProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
         _pageData = PageResponse.fromJson(responseData, ProductAdminModel.fromJson);
-        _products = _pageData!.content;
+        if (_pageData != null) {
+          _products = _pageData!.content;
+        } else {
+          _products = [];
+        }
+
         _errorMessage = null;
       } else {
         _errorMessage = "Lỗi tải sản phẩm: ${response.statusCode} - ${utf8.decode(response.bodyBytes)}";
@@ -71,7 +76,7 @@ class ProductAdminProvider with ChangeNotifier {
 
 
   Future<ProductAdminModel?> createProduct(
-      Map<String, dynamic> productDataMap, { // Đổi tên productData thành productDataMap để rõ ràng hơn
+      Map<String, dynamic> productDataMap, {
         File? imageFile,
       }) async {
     _isLoading = true;
@@ -79,55 +84,97 @@ class ProductAdminProvider with ChangeNotifier {
     notifyListeners();
 
     ProductAdminModel? createdProduct;
+    print("📦 Base URL: $_baseUrl");
+
     try {
-      var request = http.MultipartRequest('POST', Uri.parse(_baseUrl));
-
-      // ***** SỬA ĐỔI QUAN TRỌNG Ở ĐÂY *****
-      // Gửi productDataMap dưới dạng một part JSON có tên "productData"
-      request.files.add(http.MultipartFile.fromString(
-        'productData', // Phải khớp với @RequestPart("productData") ở backend
-        jsonEncode(productDataMap),
-        contentType: MediaType('application', 'json'), // Quan trọng!
-      ));
-      // *************************************
-
-      if (imageFile != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'imageFile', // Phải khớp với @RequestPart("imageFile") ở backend
-            imageFile.path,
-            filename: path_helper.basename(imageFile.path),
-          ),
-        );
-        print("ProductAdminProvider: Uploading image file: ${imageFile.path}");
-      } else {
-        print("ProductAdminProvider: No image file to upload for create.");
+      // 🔍 Kiểm tra productDataMap có rỗng không
+      if (productDataMap.isEmpty) {
+        _errorMessage = "❗ productDataMap is empty!";
+        print(_errorMessage);
+        return null;
       }
 
-      print("ProductAdminProvider: Creating product with files: ${request.files.map((f) => 'Field: ${f.field}, Filename: ${f.filename}, ContentType: ${f.contentType}').toList()}");
+      print("📋 Sending productDataMap: ${jsonEncode(productDataMap)}");
 
+      var request = http.MultipartRequest('POST', Uri.parse(_baseUrl));
+
+      // 🔍 Kiểm tra các field bắt buộc trong productDataMap
+      List<String> requiredFields = ['name', 'description', 'price', 'stock', 'isPopular'];
+      for (var field in requiredFields) {
+        if (!productDataMap.containsKey(field)) {
+          print("❗ Missing field in productDataMap: $field");
+        } else if (productDataMap[field] == null) {
+          print("❗ Field is null: $field");
+        }
+      }
+
+      // 🔽 Gửi phần JSON productData
+      try {
+        var productDataJson = jsonEncode(productDataMap);
+        request.files.add(http.MultipartFile.fromString(
+          'productData',
+          productDataJson,
+          contentType: MediaType('application', 'json'),
+        ));
+      } catch (e) {
+        _errorMessage = "❗ Error encoding productDataMap: ${e.toString()}";
+        print(_errorMessage);
+        return null;
+      }
+
+      // 🔽 Gửi ảnh nếu có
+      if (imageFile != null) {
+        print("🖼️ Sending image: ${imageFile.path}");
+        request.files.add(await http.MultipartFile.fromPath(
+          'imageFile',
+          imageFile.path,
+          filename: path_helper.basename(imageFile.path),
+        ));
+      } else {
+        print("⚠️ Không có ảnh được chọn (imageFile == null)");
+      }
+
+      // 🔁 Gửi request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      print("ProductAdminProvider: Create product response status: ${response.statusCode}");
-      print("ProductAdminProvider: Create product response body: ${response.body}"); // Dùng response.body
+      print("📩 Response status: ${response.statusCode}");
+      print("📩 Response body: ${response.body}");
 
+      // 🔽 Xử lý kết quả
       if (response.statusCode == 201) {
-        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        createdProduct = ProductAdminModel.fromJson(responseData);
-        _errorMessage = null;
-        await fetchProducts(page: 0, size: _pageData?.size ?? 10, sort: 'id,desc');
-      } else {
         try {
           final responseData = jsonDecode(response.body);
-          _errorMessage = "Lỗi tạo sản phẩm: ${responseData['message'] ?? responseData['error'] ?? response.body}";
+
+          if (responseData is Map<String, dynamic>) {
+            print("🧪 responseData keys: ${responseData.keys.toList()}");
+
+            // 🔍 Kiểm tra null trong responseData nếu cần
+            List<String> modelRequiredFields = ['id', 'name', 'description', 'price']; // cập nhật theo model
+            for (var field in modelRequiredFields) {
+              if (!responseData.containsKey(field)) {
+                print("❗ Missing field in responseData: $field");
+              } else if (responseData[field] == null) {
+                print("❗ Field in responseData is null: $field");
+              }
+            }
+
+            createdProduct = ProductAdminModel.fromJson(responseData);
+          } else {
+            _errorMessage = "Phản hồi không phải Map!";
+            print(_errorMessage);
+          }
         } catch (e) {
-          _errorMessage = "Lỗi tạo sản phẩm (không parse được JSON): ${response.statusCode} - ${response.body}";
+          _errorMessage = "❗ Lỗi giải mã JSON: ${e.toString()}";
+          print(_errorMessage);
         }
+      } else {
+        _errorMessage = "❗ Lỗi tạo sản phẩm: ${response.statusCode} - ${response.body}";
+        print(_errorMessage);
       }
     } catch (e) {
-      _errorMessage = "Lỗi kết nối hoặc xử lý khi tạo sản phẩm: ${e.toString()}";
-      print("ProductAdminProvider: Error creating product: $e");
+      _errorMessage = "🔥 Exception trong try tổng: ${e.toString()}";
+      print(_errorMessage);
     }
 
     _isLoading = false;
@@ -135,12 +182,13 @@ class ProductAdminProvider with ChangeNotifier {
     return createdProduct;
   }
 
-  Future<ProductAdminModel?> updateProduct(
-      int productId,
-      Map<String, dynamic> productDataMap, { // Đổi tên productData thành productDataMap
-        File? imageFile,
-        // bool removeCurrentImage = false, // Cờ này nên được gửi bên trong productDataMap
-      }) async {
+
+  Future<ProductAdminModel?> updateProduct({
+    required int productId,
+    required Map<String, dynamic> productDataMap,
+    File? imageFile,
+    }) async {
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

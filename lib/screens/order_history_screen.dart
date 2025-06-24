@@ -8,17 +8,14 @@ import 'package:intl/intl.dart';
 import '../providers/order_provider.dart';
 import '../models/order_summary_model.dart';
 import '../providers/bottom_nav_provider.dart';
-
+import 'package:fashion_store_app/utils/formatter.dart';
 // Import các màn hình khác để điều hướng
 import 'order_detail_screen.dart';
 
-// Các hàm helper (bạn có thể đưa chúng vào file utils chung)
-final currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDigits: 0, name: '');
 
-String _formatCurrency(double? value) {
-  if (value == null) return "N/A";
-  return currencyFormatter.format(value) + " VNĐ";
-}
+// Các hàm helper (bạn có thể đưa chúng vào file utils chung)
+//final currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDigits: 0, name: '');
+
 
 String _fixImageUrl(String? originalUrlFromApi) {
   const String serverBase = "http://10.0.2.2:8080";
@@ -47,6 +44,10 @@ class OrderHistoryScreen extends StatefulWidget {
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   late Future<void> _fetchOrdersFuture;
+  int _currentPage = 0;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+
 
   @override
   void initState() {
@@ -56,10 +57,27 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     _fetchOrdersFuture = _loadOrders();
   }
 
-  Future<void> _loadOrders() {
-    // listen: false vì chúng ta chỉ gọi hàm một lần, không cần rebuild widget này khi hàm được gọi.
-    return Provider.of<OrderProvider>(context, listen: false).fetchUserOrders();
+  Future<void> _loadOrders({bool loadMore = false}) async {
+    if (_isLoadingMore && loadMore) return;
+
+    setState(() {
+      _isLoadingMore = loadMore;
+    });
+
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final pageToFetch = loadMore ? _currentPage + 1 : 0;
+
+    await orderProvider.fetchUserOrders(page: pageToFetch, size: 10);
+
+    if (mounted) {
+      setState(() {
+        _currentPage = orderProvider.currentPage;
+        _hasMore = orderProvider.hasNextPage;
+        _isLoadingMore = false;
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -93,16 +111,33 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () => _loadOrders(),
+                  onRefresh: () => _loadOrders(), // Tải lại từ trang đầu
                   child: ListView.builder(
                     padding: const EdgeInsets.all(10.0),
-                    itemCount: orderProvider.userOrders.length,
+                    itemCount: orderProvider.userOrders.length + (_hasMore ? 1 : 0), // +1 nếu còn trang
                     itemBuilder: (context, index) {
-                      final order = orderProvider.userOrders[index];
-                      return _buildOrderItemCard(context, order);
+                      if (index < orderProvider.userOrders.length) {
+                        final order = orderProvider.userOrders[index];
+                        return _buildOrderItemCard(context, order);
+                      } else {
+                        // 👉 Hiển thị nút Tải thêm hoặc Progress khi còn trang
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: _isLoadingMore
+                                ? const CircularProgressIndicator()
+                                : ElevatedButton.icon(
+                              onPressed: () => _loadOrders(loadMore: true),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Tải thêm'),
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 );
+
               },
             );
           }
@@ -211,7 +246,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     style: TextStyle(color: Colors.grey[800], fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                   Text(
-                    _formatCurrency(order.totalAmount),
+                    currencyFormatter.format(order.totalAmount),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
                       fontSize: 16,

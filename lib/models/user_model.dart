@@ -35,7 +35,7 @@ class User {
       // Giả sử 'id' từ JSON luôn là int hoặc có thể parse thành int
       id: (jsonMap['id'] as num).toInt(), // Chuyển đổi sang int
       // Ánh xạ 'full_name' từ JSON sang thuộc tính fullName
-      fullName: jsonMap['full_name'] as String? ?? '', // Cung cấp giá trị mặc định nếu null
+      fullName: jsonMap['fullName'] as String? ?? '', // Cung cấp giá trị mặc định nếu null
       // Ánh xạ 'name' từ JSON sang thuộc tính username
       username: jsonMap['name'] as String? ?? '', // Cung cấp giá trị mặc định nếu null
       email: jsonMap['email'] as String? ?? '',

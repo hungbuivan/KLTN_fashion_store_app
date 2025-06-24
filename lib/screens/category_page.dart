@@ -1,16 +1,15 @@
-// category_page.dart
+// file: lib/screens/category_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:iconsax/iconsax.dart';
 
+// Import các provider và model cần thiết
+import '../providers/category_provider.dart';
+import '../models/category_node_model.dart';
+
+// Import các widget và màn hình khác
 import '../widgets/all_product.dart';
-
-// Giả sử bạn có một model cho Category
-class Category {
-  final String name;
-  final String imageUrl; // Đường dẫn ảnh hoặc URL
-  // Thêm các thuộc tính khác nếu cần
-
-  Category({required this.name, required this.imageUrl});
-}
+import 'products_by_category_screen.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
@@ -19,28 +18,24 @@ class CategoryPage extends StatefulWidget {
   State<CategoryPage> createState() => _CategoryPageState();
 }
 
-class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderStateMixin { // Thêm SingleTickerProviderStateMixin nếu dùng TabController
-  // Dữ liệu mẫu cho danh mục (sau này sẽ lấy từ API hoặc database)
-  final List<Category> _categories = [
-    Category(name: "Men", imageUrl: "assets/images/clothing.png"), // Thay bằng đường dẫn ảnh thực tế
-    Category(name: "Shoes", imageUrl: "assets/images/shoes.png"),
-    Category(name: "Women", imageUrl: "assets/images/accessories.png"),
-    Category(name: "Couple", imageUrl: "assets/images/accessories.png"),
-    Category(name: "Bag", imageUrl: "assets/images/accessories.png"),
-    // Thêm các danh mục khác
-  ];
-
-  TabController? _tabController;
+class _CategoryPageState extends State<CategoryPage> with TickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // 2 tabs: Products, Categories
+    // Khởi tạo TabController với 2 tab: "Sản phẩm" và "Danh mục"
+    _tabController = TabController(length: 2, vsync: this);
+
+    // Tùy chọn: Gọi lại fetchCategoryTree nếu bạn muốn đảm bảo dữ liệu luôn mới nhất khi vào trang
+    // Việc này đã được thực hiện trong constructor của CategoryProvider, nhưng gọi lại ở đây
+    // sẽ hữu ích nếu bạn muốn có chức năng "kéo để làm mới" trong tương lai.
+    // Provider.of<CategoryProvider>(context, listen: false).fetchCategoryTree();
   }
 
   @override
   void dispose() {
-    _tabController?.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -48,23 +43,23 @@ class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: NestedScrollView( // Sử dụng NestedScrollView để thanh tab có thể cuộn cùng nội dung hoặc cố định
+        child: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
               SliverAppBar(
-                title: const Text('Explore', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black)),
-                backgroundColor: Colors.white, // Hoặc màu nền bạn muốn
-                pinned: false, // Tiêu đề "Explore" không pin lại khi cuộn
-                automaticallyImplyLeading: false, // Bỏ nút back nếu không cần
+                title: const Text('Danh mục', style: TextStyle(fontSize: 25, color: Colors.black)),
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                pinned: false,
+                automaticallyImplyLeading: false,
                 elevation: 0,
               ),
-              SliverToBoxAdapter( // Cho thanh tìm kiếm
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Search products...',
-                      prefixIcon: Icon(Icons.search),
+                      hintText: 'Tìm kiếm sản phẩm',
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25.0),
                         borderSide: BorderSide.none,
@@ -75,32 +70,51 @@ class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderSt
                   ),
                 ),
               ),
-              SliverPersistentHeader( // Cho TabBar
+              SliverPersistentHeader(
                 delegate: _SliverAppBarDelegate(
                   TabBar(
                     controller: _tabController,
-                    labelColor: Colors.blue, // Màu chữ của tab được chọn
-                    unselectedLabelColor: Colors.grey, // Màu chữ của tab không được chọn
-                    indicatorColor: Colors.blue, // Màu của gạch chân dưới tab được chọn
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Theme.of(context).colorScheme.primary,
                     tabs: const [
-                      Tab(text: 'Products'),
-                      Tab(text: 'Categories'),
-
+                      Tab(text: 'Sản phẩm'),
+                      Tab(text: 'Thương hiệu'), // Hoặc Danh mục cha
                     ],
                   ),
                 ),
-                pinned: true, // Pin TabBar lại khi cuộn
+                pinned: true,
               ),
             ];
           },
           body: TabBarView(
             controller: _tabController,
             children: <Widget>[
-              // Nội dung cho tab "Products"
-              AllProducts(), // <-- THAY THẾ Ở ĐÂY
+              // ✅ Bọc lại bằng SingleChildScrollView
+              SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: AllProducts(), // AllProducts sẽ không có scroll riêng, chỉ hiển thị nội dung
+              ),
 
-              // Nội dung cho tab "Categories" (Lưới danh mục)
-              _buildCategoriesGrid(),
+              // Nội dung cho tab "Danh mục"
+              Consumer<CategoryProvider>(
+                builder: (context, categoryProvider, child) {
+                  // Hiển thị vòng xoay loading khi đang tải
+                  if (categoryProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  // Hiển thị lỗi nếu có
+                  if (categoryProvider.errorMessage != null) {
+                    return Center(child: Text(categoryProvider.errorMessage!));
+                  }
+                  // Hiển thị danh sách rỗng
+                  if (categoryProvider.categoryTree.isEmpty) {
+                    return const Center(child: Text('Không có danh mục nào.'));
+                  }
+                  // Hiển thị cây danh mục
+                  return _buildCategoryTree(categoryProvider.categoryTree);
+                },
+              ),
             ],
           ),
         ),
@@ -108,68 +122,78 @@ class _CategoryPageState extends State<CategoryPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildCategoriesGrid() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GridView.builder(
-        // physics: NeverScrollableScrollPhysics(), // Bỏ dòng này nếu GridView là nội dung chính của TabBarView và cần cuộn độc lập
-        // shrinkWrap: true, // Bỏ dòng này nếu GridView là nội dung chính của TabBarView
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // Số cột
-          crossAxisSpacing: 16.0, // Khoảng cách ngang giữa các item
-          mainAxisSpacing: 16.0, // Khoảng cách dọc giữa các item
-          childAspectRatio: 0.85, // Tỷ lệ chiều rộng/chiều cao của mỗi item (điều chỉnh cho phù hợp)
-        ),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          return _buildCategoryItem(category);
-        },
-      ),
+  // Widget để xây dựng giao diện cây danh mục
+  Widget _buildCategoryTree(List<CategoryNodeModel> categories) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(8.0),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final parentCategory = categories[index];
+
+        // Nếu danh mục cha không có con, nó sẽ hoạt động như một nút ListTile bình thường
+        if (parentCategory.children.isEmpty) {
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              leading: const Icon(Iconsax.category),
+              title: Text(parentCategory.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              trailing: const Icon(Iconsax.arrow_right_3, size: 18),
+              onTap: () {
+                // Điều hướng khi nhấn vào danh mục cha không có con
+                Navigator.of(context).pushNamed(
+                  ProductsByCategoryScreen.routeName,
+                  arguments: {
+                    'categoryId': parentCategory.id,
+                    'categoryName': parentCategory.name,
+                  },
+                );
+              },
+            ),
+          );
+        }
+
+        // Ngược lại, nếu có con, hiển thị dạng ExpansionTile có thể mở rộng
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          clipBehavior: Clip.antiAlias,
+          child: ExpansionTile(
+            key: PageStorageKey(parentCategory.id), // Giữ trạng thái đóng/mở khi cuộn
+            leading: const Icon(Iconsax.folder_open),
+            title: Text(
+              parentCategory.name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            children: parentCategory.children.map((childCategory) {
+              return _buildSubCategoryItem(childCategory);
+            }).toList(),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCategoryItem(Category category) {
-    return GestureDetector(
-      onTap: () {
-        // Xử lý khi người dùng nhấn vào một danh mục
-        print('Tapped on ${category.name}');
-        // Ví dụ: Navigator.push(context, MaterialPageRoute(builder: (_) => ProductsByCategoryPage(category: category)));
-      },
-      child: Card(
-        clipBehavior: Clip.antiAlias, // Để bo góc hình ảnh
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        elevation: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Expanded(
-              child: Image.asset( // Hoặc Image.network nếu URL từ API
-                category.imageUrl,
-                fit: BoxFit.cover,
-                // Thêm errorBuilder cho Image nếu cần
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(child: Icon(Icons.broken_image, size: 40, color: Colors.grey));
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                category.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+  // Widget để xây dựng giao diện cho mỗi danh mục con
+  Widget _buildSubCategoryItem(CategoryNodeModel subCategory) {
+    return Material(
+      color: Colors.grey.withOpacity(0.05),
+      child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 30.0, right: 16.0),
+        leading: const Icon(Iconsax.category_2, size: 20),
+        title: Text(subCategory.name),
+        trailing: const Icon(Iconsax.arrow_right_3, size: 18),
+        onTap: () {
+          // Điều hướng khi nhấn vào một danh mục con
+          Navigator.of(context).pushNamed(
+            ProductsByCategoryScreen.routeName,
+            arguments: {
+              'categoryId': subCategory.id,
+              'categoryName': subCategory.name,
+            },
+          );
+        },
       ),
     );
   }
@@ -183,14 +207,17 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
+
   @override
   double get maxExtent => _tabBar.preferredSize.height;
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context, double shrinkOffset,
+      bool overlapsContent) {
     return Container(
-      color: Colors.white, // Màu nền cho khu vực TabBar
+      color: Theme
+          .of(context)
+          .scaffoldBackgroundColor, // Đồng bộ màu nền
       child: _tabBar,
     );
   }

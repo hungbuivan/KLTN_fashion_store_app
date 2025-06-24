@@ -304,7 +304,7 @@ class _AddEditVoucherScreenState extends State<AddEditVoucherScreen> {
                   onPressed: _isSaving ? null : _saveForm,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.blue,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),

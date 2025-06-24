@@ -1,5 +1,6 @@
 // file: lib/screens/admin/pages/add_edit_product_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'dart:io'; // Để làm việc với File
@@ -8,6 +9,47 @@ import '../../../models/admin/product_admin_model.dart';
 import '../../../providers/product_admin_provider.dart';
 
 const String backendBaseUrl = "http://10.0.2.2:8080";
+String _fixImageUrl(String? originalUrlFromApi) {
+  const String serverBase = "http://10.0.2.2:8080";
+  if (originalUrlFromApi == null || originalUrlFromApi.isEmpty) return '';
+  if (originalUrlFromApi.startsWith('http')) return originalUrlFromApi;
+  if (originalUrlFromApi.startsWith('/')) return serverBase + originalUrlFromApi;
+  return '$serverBase/images/products/$originalUrlFromApi';
+}
+
+// Class helper để quản lý state của mỗi dòng variant trên UI
+class VariantInputData {
+  final int id; // ID tạm thời để xác định widget trong list
+  final TextEditingController sizeController = TextEditingController();
+  final TextEditingController colorController = TextEditingController();
+  final TextEditingController stockController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final int? variantDbId; // ID thực tế từ database (nếu là variant đã có)
+
+  VariantInputData({required this.id, this.variantDbId});
+
+  // Chuyển đổi dữ liệu từ form thành Map để gửi lên API
+  Map<String, dynamic> toJson() {
+    return {
+      'id': variantDbId, // Gửi id nếu là cập nhật
+      'size': sizeController.text.trim(),
+      'color': colorController.text.trim(),
+      'stock': int.tryParse(stockController.text.trim()) ?? 0,
+      'price': priceController.text.trim().isEmpty
+          ? null
+          : double.tryParse(priceController.text.trim()),
+      // 'imageUrl': ... // Logic ảnh cho variant sẽ phức tạp hơn
+    };
+  }
+
+  void dispose() {
+    sizeController.dispose();
+    colorController.dispose();
+    stockController.dispose();
+    priceController.dispose();
+  }
+}
+
 
 class AddEditProductScreen extends StatefulWidget {
   final ProductAdminModel? product;
@@ -33,6 +75,26 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   bool _isSaving = false;
   bool _removeCurrentImage = false; // Cờ để xóa ảnh hiện tại khi edit
 
+
+
+  // ✅ STATE MỚI: Thêm các biến này vào đầu class _AddEditProductScreenState
+  List<VariantInputData> _variantRows = [];
+  int _nextVariantId = 0; // Để tạo id duy nhất cho mỗi dòng variant
+
+  // ✅ HÀM MỚI: Thêm một dòng variant trống
+  void _addVariantRow() {
+    setState(() {
+      _variantRows.add(VariantInputData(id: _nextVariantId++));
+    });
+  }
+
+  // ✅ HÀM MỚI: Xóa một dòng variant
+  void _removeVariantRow(int id) {
+    setState(() {
+      _variantRows.removeWhere((row) => row.id == id);
+    });
+  }
+
   @override
   @override
   void initState() {
@@ -44,6 +106,19 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       print("AddEditScreen initState: widget.product.id = ${widget.product!.id}");
       print("AddEditScreen initState: widget.product.name = ${widget.product!.name}");
       print("AddEditScreen initState: raw widget.product.imageUrl = '${widget.product!.imageUrl}'"); // QUAN TRỌNG
+      final p = widget.product!;
+      // Điền dữ liệu cho các variant đã có
+      if (p.variants.isNotEmpty) {
+        _variantRows = p.variants.map((variant) {
+          final newRow = VariantInputData(id: _nextVariantId++, variantDbId: variant.id);
+          newRow.sizeController.text = variant.size ?? '';
+          newRow.colorController.text = variant.color ?? '';
+          newRow.stockController.text = variant.stock?.toString() ?? '0';
+          newRow.priceController.text = variant.price?.toStringAsFixed(0) ?? '';
+          return newRow;
+        }).toList();
+      }
+
     }
 
     _nameController = TextEditingController(text: widget.product?.name ?? '');
@@ -63,7 +138,21 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _priceController.dispose();
     _stockController.dispose();
     _imageUrlController.dispose();
+    for (var row in _variantRows) {
+      row.dispose();
+    }
     super.dispose();
+
+  }
+  // ✅ HÀM HELPER PHẢI ĐƯỢC ĐẶT BÊN TRONG CLASS _AddEditVoucherScreenState
+  InputDecoration _inputDecoration(String label, {String? hint, IconData? prefixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
+      border: const OutlineInputBorder(),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    );
   }
 
   Future<void> _pickImage() async {
@@ -83,97 +172,102 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) {
+      print("Form không hợp lệ.");
       return;
     }
+
     _formKey.currentState!.save();
-    setState(() { _isSaving = true; });
+    setState(() => _isSaving = true);
 
     final productAdminProvider = Provider.of<ProductAdminProvider>(context, listen: false);
 
-    // Tạo Map productDataMap để gửi đi
+    // Thu thập dữ liệu từ các dòng variant
+    List<Map<String, dynamic>> variantsData = _variantRows
+        .where((row) => row.sizeController.text.isNotEmpty || row.colorController.text.isNotEmpty)
+        .map((row) => row.toJson())
+        .toList();
+
+    // Map dữ liệu sản phẩm chính
     Map<String, dynamic> productDataMap = {
       'name': _nameController.text.trim(),
       'description': _descriptionController.text.trim(),
       'price': double.tryParse(_priceController.text.trim()),
-      'stock': int.tryParse(_stockController.text.trim()),
-      // 'categoryId': _selectedCategoryId, // TODO: Lấy từ state của bạn (ví dụ: int? _selectedCategoryId;)
-      // 'brandId': _selectedBrandId,       // TODO: Lấy từ state của bạn (ví dụ: int? _selectedBrandId;)
+      // 'stock' sẽ được tính ở backend từ tổng stock của variants
       'isPopular': _isPopular,
-      // 'isFavorite': _isFavorite, // Nếu bạn có trường isFavorite trong ProductUpdateRequest và ProductAdminModel
+      // 'categoryId': _selectedCategoryId, // Thêm category dropdown nếu cần
+      // 'brandId': _selectedBrandId, // Thêm brand dropdown nếu cần
+      'variants': variantsData, // Thêm danh sách variants vào request
     };
 
-    // Xử lý imageUrl và removeCurrentImage
+    print("✅ Base productDataMap: $productDataMap");
+
     if (_isEditMode) {
-      // Thêm cờ removeCurrentImage vào productDataMap cho chế độ update
       productDataMap['removeCurrentImage'] = _removeCurrentImage && _selectedImageFile == null;
 
-      if (_selectedImageFile == null && !_removeCurrentImage && _imageUrlController.text.trim().isNotEmpty) {
-        // Nếu không có file mới, không yêu cầu xóa, và có URL trong controller -> gửi URL đó
-        productDataMap['imageUrl'] = _imageUrlController.text.trim();
+      if (_selectedImageFile == null && !_removeCurrentImage) {
+        String currentUrl = _imageUrlController.text.trim();
+        if (currentUrl.isNotEmpty &&
+            (currentUrl.startsWith('http://') || currentUrl.startsWith('https://'))) {
+          productDataMap['imageUrl'] = currentUrl;
+          print("✅ imageUrl được giữ nguyên khi cập nhật: $currentUrl");
+        } else {
+          print("⚠️ Không gửi imageUrl vì là path tương đối hoặc trống.");
+        }
       } else if (_selectedImageFile == null && _removeCurrentImage) {
-        // Nếu yêu cầu xóa và không có file mới, backend sẽ xóa dựa trên removeCurrentImage = true
-        // Không cần gửi imageUrl nếu nó sẽ bị xóa, hoặc gửi null nếu backend của bạn mong đợi vậy
-        productDataMap['imageUrl'] = null; // Hoặc không thêm key này, tùy backend
+        productDataMap['imageUrl'] = null;
+        print("🗑️ Đánh dấu xóa ảnh hiện tại.");
+      } else {
+        print("🖼️ Có ảnh mới được chọn -> gửi qua Multipart.");
       }
-      // Nếu có _selectedImageFile, imageUrl sẽ được xử lý bởi backend từ file upload,
-      // không cần thêm 'imageUrl' vào productDataMap từ _imageUrlController.
-    } else { // Chế độ tạo mới
-      if (_selectedImageFile == null && _imageUrlController.text.trim().isNotEmpty) {
-        productDataMap['imageUrl'] = _imageUrlController.text.trim();
+    } else {
+      // Chế độ tạo mới
+      String newImageUrl = _imageUrlController.text.trim();
+      if (_selectedImageFile == null && newImageUrl.isNotEmpty) {
+        if (newImageUrl.startsWith('http://') || newImageUrl.startsWith('https://')) {
+          productDataMap['imageUrl'] = newImageUrl;
+          print("✅ imageUrl được gửi khi tạo mới: $newImageUrl");
+        } else {
+          print("⚠️ URL hình ảnh không hợp lệ khi tạo mới, không gửi: $newImageUrl");
+        }
       }
-      // Nếu có _selectedImageFile, không cần gửi 'imageUrl' trong productDataMap
     }
 
-    // (Tùy chọn) Loại bỏ các key có giá trị null khỏi productDataMap nếu backend của bạn không muốn nhận chúng
-    // productDataMap.removeWhere((key, value) => value == null);
-
     ProductAdminModel? resultProduct;
+
     try {
       if (_isEditMode) {
-        productDataMap['removeCurrentImage'] = _removeCurrentImage && _selectedImageFile == null;
-
-        if (_selectedImageFile == null && !_removeCurrentImage) {
-          // Chỉ gửi imageUrl nếu người dùng thực sự sửa đổi nó trong _imageUrlController
-          // và nó là một URL đầy đủ hợp lệ, HOẶC nếu bạn muốn cho phép gửi path tương đối
-          // và backend sẽ bỏ qua validation @Pattern nếu nó là path tương đối (cần sửa backend).
-          // Tạm thời, để tránh lỗi validation, chỉ gửi nếu nó thực sự là URL mới hoặc không gửi gì cả
-          // nếu _imageUrlController.text vẫn là path tương đối cũ.
-          String currentImageUrlInController = _imageUrlController.text.trim();
-          if (currentImageUrlInController.isNotEmpty &&
-              (currentImageUrlInController.startsWith('http://') || currentImageUrlInController.startsWith('https://'))) {
-            // Nếu người dùng nhập một URL đầy đủ mới vào controller
-            productDataMap['imageUrl'] = currentImageUrlInController;
-          }
-          // KHÔNG gửi productDataMap['imageUrl'] nếu _imageUrlController.text là path tương đối cũ
-          // như "/images/products/..." hoặc "viettien_shirt.jpg".
-          // Backend sẽ giữ nguyên imageUrl hiện tại của sản phẩm nếu không có file mới và không có
-          // productDataMap['imageUrl'] mới được gửi (hoặc nếu nó null và removeCurrentImage là false).
-        }
-        // Nếu có _selectedImageFile, không cần gửi 'imageUrl' trong productDataMap
-      } else { // Chế độ tạo mới
-        if (_selectedImageFile == null && _imageUrlController.text.trim().isNotEmpty) {
-          // Cho phép gửi URL từ controller khi tạo mới nếu nó hợp lệ
-          if (_imageUrlController.text.trim().startsWith('http://') || _imageUrlController.text.trim().startsWith('https://')) {
-            productDataMap['imageUrl'] = _imageUrlController.text.trim();
-          } else {
-            // Nếu không phải URL đầy đủ, không gửi hoặc báo lỗi ở client trước khi gửi
-            print("URL hình ảnh không hợp lệ khi tạo mới, không gửi: ${_imageUrlController.text.trim()}");
-          }
-        }
+        print("🚀 Đang cập nhật sản phẩm với ID: ${widget.product?.id}");
+        resultProduct = await productAdminProvider.updateProduct(
+          productId: widget.product!.id,
+          productDataMap: productDataMap,
+          imageFile: _selectedImageFile,
+        );
+      } else {
+        print("🚀 Đang tạo mới sản phẩm...");
+        resultProduct = await productAdminProvider.createProduct(
+          productDataMap,
+          imageFile: _selectedImageFile,
+        );
       }
+
+
+      print("✅ Kết quả trả về từ server: $resultProduct");
     } catch (error) {
+      print("❌ Lỗi khi gửi dữ liệu: ${error.toString()}");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi không mong muốn: ${error.toString()}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Lỗi không mong muốn: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
       resultProduct = null;
     }
 
-    if (mounted) { // Kiểm tra mounted trước khi gọi setState
-      setState(() { _isSaving = false; });
+    if (mounted) {
+      setState(() => _isSaving = false);
     }
-
 
     if (mounted) {
       if (resultProduct != null) {
@@ -187,14 +281,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       } else {
         final errorMsg = productAdminProvider.errorMessage;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg != null && errorMsg.isNotEmpty ? errorMsg : 'Lỗi khi lưu sản phẩm. Vui lòng thử lại.'),
-            backgroundColor: Colors.red,
-          ),
+            SnackBar(
+              content: Text((errorMsg?.isNotEmpty ?? false)
+                  ? errorMsg!
+                  : 'Lỗi khi lưu sản phẩm. Vui lòng thử lại.'),
+              backgroundColor: Colors.red,
+            )
+
         );
       }
     }
   }
+
 
 
   @override
@@ -344,7 +442,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     ),
                     child: Center(
                       child: _selectedImageFile != null
-                          ? ClipRRect( // Để bo góc ảnh preview
+                          ? ClipRRect(
                         borderRadius: BorderRadius.circular(7),
                         child: Image.file(
                           _selectedImageFile!,
@@ -353,32 +451,34 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           height: double.infinity,
                         ),
                       )
-                          : (_imageUrlController.text.isNotEmpty) // Kiểm tra URL từ controller
-                          ? ClipRRect(
-                        borderRadius: BorderRadius.circular(7),
-                        child: Image.network(
-                          _imageUrlController.text,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Giá trị của imageToShowUrl tại thời điểm lỗi này là gì?
-                            print("AddEditScreen Image.network INSIDE errorBuilder - URL was: '$imageToShowUrl' - ERROR: $error");
-                            // Thử in lại _imageUrlController.text ở đây xem có gì lạ không
-                            print("AddEditScreen Image.network INSIDE errorBuilder - _imageUrlController.text: '${_imageUrlController.text}'");
-                            return const Center(child: Icon(Iconsax.gallery_slash, size: 50, color: Colors.grey));
-                          },
-                          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            );
-                          },
-                        ),
+                          : (_imageUrlController.text.isNotEmpty)
+                          ? Builder(
+                        builder: (context) {
+                          final imageUrlToShow = _fixImageUrl(_imageUrlController.text);
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(7),
+                            child: Image.network(
+                              imageUrlToShow,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                print("Image.network ERROR URL: $imageUrlToShow");
+                                return const Center(child: Icon(Iconsax.gallery_slash, size: 50, color: Colors.grey));
+                              },
+                              loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       )
                           : const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -407,29 +507,41 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                             setState(() {
                               _selectedImageFile = null;
                               _imageUrlController.clear();
-                              _removeCurrentImage = true; // Đặt cờ để báo cho backend xóa
+                              _removeCurrentImage = true;
                             });
                           },
                         ),
                     ],
                   ),
-                  // Tùy chọn: Vẫn cho phép nhập URL nếu muốn
-                  // TextFormField(
-                  //   controller: _imageUrlController,
-                  //   decoration: const InputDecoration(labelText: 'Hoặc nhập URL Hình ảnh', border: OutlineInputBorder()),
-                  //   keyboardType: TextInputType.url,
-                  //   validator: (value) {
-                  //     if (_selectedImageFile == null && (value == null || value.trim().isEmpty) && !_removeCurrentImage) {
-                  //       // return 'Vui lòng chọn ảnh hoặc nhập URL'; // Bỏ comment nếu muốn bắt buộc có ảnh
-                  //     }
-                  //     if (value != null && value.trim().isNotEmpty && !Uri.parse(value.trim()).isAbsolute) {
-                  //       return 'URL không hợp lệ';
-                  //     }
-                  //     return null;
-                  //   },
-                  // ),
                 ],
               ),
+              // ✅ KHU VỰC QUẢN LÝ VARIANTS
+              const Divider(height: 40, thickness: 1.5, indent: 20, endIndent: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Các phiên bản sản phẩm", style: Theme.of(context).textTheme.titleLarge),
+                  IconButton.filled(
+                    icon: const Icon(Iconsax.add),
+                    onPressed: _addVariantRow,
+                    tooltip: 'Thêm phiên bản',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_variantRows.isEmpty)
+                const Center(child: Padding(padding: EdgeInsets.all(8.0), child: Text('Sản phẩm này chưa có phiên bản (size, màu).', style: TextStyle(color: Colors.grey)))),
+
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _variantRows.length,
+                itemBuilder: (context, index) {
+                  final variantRow = _variantRows[index];
+                  return _buildVariantInputRow(variantRow);
+                },
+              ),
+
               const SizedBox(height: 16),
 
               // TODO: Thêm DropdownButtonFormField cho Category ID và Brand ID
@@ -458,4 +570,43 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       ),
     );
   }
+
+  // Widget mới để xây dựng một hàng nhập liệu cho variant
+  Widget _buildVariantInputRow(VariantInputData variantData) {
+    return Card(
+      key: ValueKey(variantData.id),
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      color: Colors.white,
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(child: TextFormField(controller: variantData.sizeController, decoration: _inputDecoration('Size', hint: 'S, M, 39...'))),
+                const SizedBox(width: 8),
+                Expanded(child: TextFormField(controller: variantData.colorController, decoration: _inputDecoration('Màu sắc', hint: 'Đen...'))),
+                IconButton(
+                  icon: const Icon(Iconsax.trash, color: Colors.redAccent),
+                  onPressed: () => _removeVariantRow(variantData.id),
+                  tooltip: 'Xóa phiên bản này',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: TextFormField(controller: variantData.stockController, decoration: _inputDecoration('Tồn kho *'), keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], validator: (v) => (v == null || v.isEmpty) ? 'Nhập kho' : null)),
+                const SizedBox(width: 8),
+                Expanded(child: TextFormField(controller: variantData.priceController, decoration: _inputDecoration('Giá riêng (tùy chọn)'), keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

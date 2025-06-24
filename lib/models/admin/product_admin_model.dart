@@ -1,5 +1,7 @@
 // file: lib/models/admin/product_admin_model.dart
 // Model này ánh xạ với ProductAdminResponse.java từ backend
+import 'package:fashion_store_app/models/admin/product_variant_admin_model.dart';
+
 class ProductAdminModel {
   final int id;
   final String name;
@@ -15,6 +17,8 @@ class ProductAdminModel {
   final bool? isFavorite; // Xem xét có cần ở đây không
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // ✅ THÊM TRƯỜNG MỚI
+  final List<ProductVariantAdminModel> variants;
 
   ProductAdminModel({
     required this.id,
@@ -31,12 +35,28 @@ class ProductAdminModel {
     this.isFavorite,
     this.createdAt,
     this.updatedAt,
+    this.variants = const [], // ✅ Thêm vào constructor
   });
 
   factory ProductAdminModel.fromJson(Map<String, dynamic> json) {
+
+    // ✅ Logic mới để parse danh sách variants từ JSON
+    List<ProductVariantAdminModel> parsedVariants = [];
+    if (json['variants'] != null && json['variants'] is List) {
+      parsedVariants = (json['variants'] as List)
+          .map((variantJson) => ProductVariantAdminModel.fromJson(variantJson as Map<String, dynamic>))
+          .toList();
+    }
+
+    print("📦 Parsing ProductAdminModel from JSON: $json");
+
+    if (json['id'] == null) {
+      throw Exception("Lỗi: Trường 'id' null hoặc không có trong JSON trả về.");
+    }
+
     return ProductAdminModel(
       id: json['id'] as int,
-      name: json['name'] as String? ?? 'N/A', // Xử lý null cho name
+      name: json['name'] as String? ?? 'N/A',
       description: json['description'] as String?,
       price: (json['price'] as num?)?.toDouble(),
       stock: json['stock'] as int?,
@@ -49,8 +69,10 @@ class ProductAdminModel {
       isFavorite: json['isFavorite'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+      variants: parsedVariants, // ✅ Gán danh sách đã parse
     );
   }
+
 
   // Dùng cho việc tạo mới hoặc cập nhật sản phẩm
   // Chỉ bao gồm các trường mà client có thể gửi đi

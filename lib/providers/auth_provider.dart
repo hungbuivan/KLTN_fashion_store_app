@@ -16,7 +16,6 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   User? get user => _user;
 
-  // ✅ _isLoading giờ chỉ dành cho hành động login/signup thủ công
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -33,107 +32,83 @@ class AuthProvider with ChangeNotifier {
   bool get hidePassword => _hidePassword;
 
   final _secureStorage = const FlutterSecureStorage();
-  static const _userDataKey = 'current_user_data_v3';
+  static const _userDataKey = 'current_user_data_v3'; // Key để lưu trữ dữ liệu user
 
-  AuthProvider() {
-    _tryAutoLogin();
-  }
+  // AuthProvider() {
+  //   _tryAutoLogin();
+  // }
 
   bool get isAuthenticated => _authInitStatus == AuthInitStatus.authenticated && _user != null;
   bool get isGuest => _authInitStatus == AuthInitStatus.unauthenticated || _user == null;
   bool get isAdmin => isAuthenticated && _user?.role == 'admin';
   bool get isRegularUser => isAuthenticated && _user?.role == 'user';
 
-  Future<void> _tryAutoLogin() async {
-    // ✅ Không set _isLoading = true ở đây nữa.
-    // Chỉ cập nhật _authInitStatus để DecisionScreen có thể hiển thị màn hình chờ.
-    _authInitStatus = AuthInitStatus.unknown;
-    notifyListeners(); // Thông báo app đang kiểm tra trạng thái ban đầu
+  // // Thử tự động đăng nhập khi khởi động app
+  // Future<void> _tryAutoLogin() async {
+  //   _authInitStatus = AuthInitStatus.unknown;
+  //   notifyListeners();
+  //
+  //   User? potentialUser;
+  //   AuthInitStatus determinedStatus = AuthInitStatus.unauthenticated;
+  //
+  //   try {
+  //     final String? storedUserDataString = await _secureStorage.read(key: _userDataKey);
+  //     if (storedUserDataString != null && storedUserDataString.isNotEmpty) {
+  //       print("AuthProvider: Tìm thấy dữ liệu người dùng đã lưu.");
+  //       try {
+  //         final Map<String, dynamic> userDataMap = jsonDecode(storedUserDataString);
+  //         potentialUser = User.fromJson(userDataMap);
+  //         determinedStatus = AuthInitStatus.authenticated;
+  //         print("AuthProvider: Tự động đăng nhập thành công cho: ${potentialUser.email}");
+  //       } catch (e) {
+  //         print("AuthProvider: Lỗi parse dữ liệu khi tự động đăng nhập: $e");
+  //         await _clearAuthDataInternal();
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("AuthProvider: Lỗi nghiêm trọng trong _tryAutoLogin: $e");
+  //   } finally {
+  //     _user = potentialUser;
+  //     _authInitStatus = determinedStatus;
+  //     notifyListeners();
+  //   }
+  // }
 
-    User? potentialUser;
-    AuthInitStatus determinedStatus = AuthInitStatus.unauthenticated;
-
-    try {
-      final String? storedUserDataString = await _secureStorage.read(key: _userDataKey);
-
-      if (storedUserDataString != null && storedUserDataString.isNotEmpty) {
-        print("AuthProvider: Tìm thấy dữ liệu người dùng đã lưu.");
-        try {
-          final Map<String, dynamic> userDataMap = jsonDecode(storedUserDataString);
-          potentialUser = User.fromJson(userDataMap);
-          determinedStatus = AuthInitStatus.authenticated;
-          print("AuthProvider: Tự động đăng nhập thành công cho: ${potentialUser.email}, Role: ${potentialUser.role}");
-        } catch (e) {
-          print("AuthProvider: Lỗi parse dữ liệu người dùng khi tự động đăng nhập: $e");
-          await _clearAuthDataInternal();
-          potentialUser = null;
-          // determinedStatus vẫn là AuthInitStatus.unauthenticated
-        }
-      } else {
-        print("AuthProvider: Không tìm thấy dữ liệu người dùng đã lưu.");
-        // potentialUser là null, determinedStatus là AuthInitStatus.unauthenticated
-      }
-    } catch (e) {
-      print("AuthProvider: Lỗi nghiêm trọng trong _tryAutoLogin: $e");
-      potentialUser = null;
-      determinedStatus = AuthInitStatus.unauthenticated;
-    } finally {
-      // Cập nhật _user và _authInitStatus. _isLoading không bị ảnh hưởng.
-      _user = potentialUser;
-      _authInitStatus = determinedStatus;
-      notifyListeners(); // Thông báo trạng thái cuối cùng cho UI
-      print("AuthProvider: _tryAutoLogin hoàn tất. authStatus: $_authInitStatus, User: ${_user?.email}");
-      // print("AuthProvider: _tryAutoLogin hoàn tất. isLoading (không đổi): $_isLoading, authStatus: $_authInitStatus, User: ${_user?.email}");
-    }
-  }
-
+  // Hàm nội bộ để xử lý và lưu dữ liệu sau khi đăng nhập/đăng ký/cập nhật thành công
   Future<void> processSuccessfulAuth(Map<String, dynamic> responseDataFromServer) async {
-    // Hàm này được gọi bởi login() hoặc signupUser() (từ SignupProvider)
-    // _isLoading đã được set true bởi hàm gọi nó.
     _errorMessage = null;
-
-    User? authenticatedUser;
-    AuthInitStatus statusAfterProcess = AuthInitStatus.unauthenticated;
-
     try {
       final userJson = responseDataFromServer['user'] as Map<String, dynamic>?;
       if (userJson == null) {
         throw Exception("Dữ liệu 'user' không hợp lệ từ server.");
       }
-      authenticatedUser = User.fromJson(userJson);
-      await _secureStorage.write(key: _userDataKey, value: jsonEncode(authenticatedUser.toJson()));
-      statusAfterProcess = AuthInitStatus.authenticated;
-      print("AuthProvider: Đã xử lý xác thực thành công. User: ${authenticatedUser.email}, Role: ${authenticatedUser.role}");
+      _user = User.fromJson(userJson);
+      await _secureStorage.write(key: _userDataKey, value: jsonEncode(_user!.toJson()));
+      _authInitStatus = AuthInitStatus.authenticated;
+      print("AuthProvider: Đã xử lý xác thực thành công. User: ${_user!.email}, Role: ${_user!.role}");
+      print("Thông tin user:");
+      print("Họ tên: ${_user!.fullName}");
+      print("Email: ${_user!.email}");
+      print("Vai trò: ${_user!.role}");
+
     } catch (e) {
       print("AuthProvider: Lỗi khi xử lý dữ liệu xác thực: $e");
       _errorMessage = "Lỗi xử lý dữ liệu người dùng: ${e.toString()}";
       await _clearAuthDataInternal();
-      authenticatedUser = null;
-      // statusAfterProcess vẫn là unauthenticated
     }
-    // Cập nhật state. _isLoading sẽ được hàm gọi (login/signup) đặt lại thành false.
-    _user = authenticatedUser;
-    _authInitStatus = statusAfterProcess;
-    // Không gọi notifyListeners() ở đây, để hàm login/signup kiểm soát việc notify cuối cùng
   }
 
+  // Hàm đăng nhập
   Future<String?> login() async {
-    if (!loginFormKey.currentState!.validate()) {
-      _errorMessage = "Vui lòng điền đầy đủ thông tin.";
-      notifyListeners();
-      return null;
-    }
+    if (!(loginFormKey.currentState?.validate() ?? false)) return null;
 
-    _isLoading = true; // ✅ Chỉ set isLoading = true khi hành động login bắt đầu
+    _isLoading = true;
     _errorMessage = null;
-    notifyListeners(); // Thông báo UI rằng đang loading
+    notifyListeners();
 
     final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
     const String apiUrl = 'http://10.0.2.2:8080/api/auth/login';
-    print('AuthProvider: Đang cố gắng đăng nhập với email: $email');
-
-    String? resultRole;
 
     try {
       final response = await http.post(
@@ -141,55 +116,94 @@ class AuthProvider with ChangeNotifier {
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({'email': email, 'password': password}),
       );
-
-      print('AuthProvider: Phản hồi API Đăng nhập - Status: ${response.statusCode}');
-      print('AuthProvider: Phản hồi API Đăng nhập - Body: ${response.body}');
-
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        await processSuccessfulAuth(responseData); // Cập nhật _user và _authInitStatus
-        resultRole = _user?.role;
+        print("Response body: ${response.body}");
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        await processSuccessfulAuth(responseData);
+        return _user?.role;
+
       } else {
-        String serverMessage = "Đăng nhập thất bại.";
-        try {
-          final errorData = jsonDecode(response.body);
-          serverMessage = errorData['message'] ?? errorData['error'] ?? 'Lỗi từ server (Code: ${response.statusCode})';
-        } catch (e) {
-          serverMessage = 'Lỗi không xác định từ server (Code: ${response.statusCode})';
-        }
-        _errorMessage = serverMessage;
-        _authInitStatus = AuthInitStatus.unauthenticated;
-        resultRole = null;
+        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+        _errorMessage = errorData['message'] ?? 'Đăng nhập thất bại.';
       }
     } catch (e) {
-      print('AuthProvider: Lỗi API Đăng nhập - $e');
-      _errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại.';
-      _authInitStatus = AuthInitStatus.unauthenticated;
-      resultRole = null;
+      _errorMessage = 'Không thể kết nối đến máy chủ.';
     } finally {
-      _isLoading = false; // ✅ Luôn đặt lại isLoading khi login hoàn tất
-      notifyListeners(); // Thông báo trạng thái cuối cùng của hành động login
+      _isLoading = false;
+      notifyListeners();
     }
-    return resultRole;
+    return null;
   }
 
+  // Hàm nội bộ để xóa dữ liệu lưu trữ
   Future<void> _clearAuthDataInternal() async {
     _user = null;
+    _authInitStatus = AuthInitStatus.unauthenticated;
     await _secureStorage.delete(key: _userDataKey);
   }
 
+  // Hàm đăng xuất
   Future<void> logout() async {
-    _isLoading = true; // Có thể có loading cho logout
+    _isLoading = true;
     notifyListeners();
-
     await _clearAuthDataInternal();
-    _authInitStatus = AuthInitStatus.unauthenticated;
     emailController.clear();
     passwordController.clear();
-    _isLoading = false; // Kết thúc loading cho logout
+    _isLoading = false;
     notifyListeners();
-    print("AuthProvider: Người dùng đã đăng xuất, dữ liệu đã được xóa.");
+    print("AuthProvider: Người dùng đã đăng xuất.");
   }
+
+  // ✅ HÀM MỚI ĐƯỢC THÊM VÀO
+  /**
+   * Tải lại thông tin người dùng từ server và cập nhật state.
+   * Rất hữu ích sau khi người dùng đã cập nhật thông tin cá nhân của họ.
+   */
+  Future<bool> fetchAndSetUser() async {
+    if (user == null) {
+      print("AuthProvider: Không có user để làm mới thông tin.");
+      return false;
+    }
+
+    final int userId = user!.id;
+    // API backend để lấy chi tiết user
+    final url = Uri.parse('http://10.0.2.2:8080/api/users/$userId');
+
+    try {
+      print("AuthProvider: Đang tải thông tin user mới từ $url");
+      // TODO: Thêm header xác thực (token) nếu API yêu cầu
+      // final response = await http.get(url, headers: {'Authorization': 'Bearer $_token'});
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+        // Backend có thể trả về user object trực tiếp hoặc lồng trong một key.
+        // Giả sử nó trả về trực tiếp.
+        final Map<String, dynamic> newUserData = responseData as Map<String, dynamic>;
+
+        // Tạo một map mới để tái sử dụng hàm processSuccessfulAuth
+        // (giả định rằng hàm này không cần token/expiryDate)
+        final dataToProcess = {'user': newUserData};
+
+        await processSuccessfulAuth(dataToProcess);
+        print("AuthProvider: Thông tin user đã được làm mới thành công.");
+        notifyListeners(); // Thông báo cho UI cập nhật với thông tin user mới
+        return true;
+      } else {
+        print("AuthProvider: Lỗi tải thông tin user mới. Status: ${response.statusCode}");
+        _errorMessage = "Không thể làm mới thông tin tài khoản.";
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối khi làm mới thông tin.";
+      print("AuthProvider: Lỗi khi gọi API fetchAndSetUser: $e");
+      notifyListeners();
+      return false;
+    }
+  }
+
 
   void toggleHidePassword() {
     _hidePassword = !_hidePassword;

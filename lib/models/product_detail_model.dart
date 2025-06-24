@@ -11,13 +11,13 @@ class ProductDetailModel {
   final String? categoryName;
   final int? brandId;
   final String? brandName;
-  // ✅ Đổi từ List<String> imageUrls thành String? imageUrl
-  final String? imageUrl; // URL hình ảnh chính của sản phẩm
 
+  // Giữ lại String? imageUrl vì bạn đã sửa theo hướng này
+  final String? imageUrl;
   final double? averageRating;
   final int? totalReviews;
-  final List<String> availableColors; // Vẫn giữ nếu sản phẩm có nhiều màu
-  final List<String> availableSizes;  // Vẫn giữ nếu sản phẩm có nhiều size
+  final List<String> availableColors;
+  final List<String> availableSizes;
   final bool? isPopular;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -33,7 +33,7 @@ class ProductDetailModel {
     this.categoryName,
     this.brandId,
     this.brandName,
-    this.imageUrl, // ✅ Cập nhật constructor
+    this.imageUrl,
     this.averageRating,
     this.totalReviews,
     required this.availableColors,
@@ -44,21 +44,20 @@ class ProductDetailModel {
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
-    List<String> parseStringList(dynamic listJson) {
-      if (listJson == null || listJson is! List) return [];
-      return List<String>.from(listJson.map((item) => item.toString()));
-    }
+    final List<dynamic> variantsJson = json['variants'] ?? [];
 
-    // ✅ Xử lý imageUrls từ backend
-    // Giả sử backend vẫn có thể trả về một list imageUrls nhưng bạn chỉ muốn lấy cái đầu tiên,
-    // hoặc backend đã được sửa để chỉ trả về một String imageUrl.
-    String? mainImageUrl;
-    if (json['imageUrls'] is List && (json['imageUrls'] as List).isNotEmpty) {
-      mainImageUrl = (json['imageUrls'] as List)[0] as String?;
-    } else if (json['imageUrl'] is String) { // Nếu backend đã trả về key 'imageUrl' là String
-      mainImageUrl = json['imageUrl'] as String?;
-    }
+    final Set<String> sizes = {};
+    final Set<String> colors = {};
 
+    for (var variant in variantsJson) {
+      if (variant is Map<String, dynamic>) {
+        final size = variant['size']?.toString();
+        final color = variant['color']?.toString();
+
+        if (size != null) sizes.add(size);
+        if (color != null) colors.add(color);
+      }
+    }
 
     return ProductDetailModel(
       id: json['id'] as int? ?? 0,
@@ -71,14 +70,16 @@ class ProductDetailModel {
       categoryName: json['categoryName'] as String?,
       brandId: json['brandId'] as int?,
       brandName: json['brandName'] as String?,
-      imageUrl: mainImageUrl, // ✅ Gán ảnh chính
+      imageUrl: json['imageUrl'] as String?,
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalReviews: json['totalReviews'] as int?,
-      availableColors: parseStringList(json['availableColors']),
-      availableSizes: parseStringList(json['availableSizes']),
+      availableColors: colors.toList(),
+      availableSizes: sizes.toList(),
       isPopular: json['isPopular'] as bool?,
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(
+          json['createdAt']) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(
+          json['updatedAt']) : null,
     );
   }
 }

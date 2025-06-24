@@ -1,5 +1,7 @@
 // lib/screens/admin/admin_home_page.dart
+import 'package:fashion_store_app/screens/admin/pages/order_management_page.dart';
 import 'package:fashion_store_app/screens/admin/pages/voucher_management_page.dart';
+import 'package:fashion_store_app/views/admin/order_management_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fashion_store_app/views/admin/admin_dashboard.dart';
 import 'package:fashion_store_app/views/admin/admin_notifications.dart';
@@ -86,6 +88,16 @@ class _AdminHomePageState extends State<AdminHomePage> {
     ));
   }
 
+  //quản lý order
+  void _navigateToOrderManagement(BuildContext context) {
+    if (Navigator.canPop(context)) {
+      Navigator.of(context).pop(); // Đóng drawer
+    }
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => const AdminOrderManagementPage(), // Trang doanh thu
+    ));
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -132,14 +144,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
               leading: Icon(Iconsax.receipt_item),
               title: const Text('Quản lý Đơn hàng'),
               onTap: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Chức năng Quản lý Đơn hàng đang phát triển!')));
+                _navigateToOrderManagement(context);
               },
             ),
             ListTile(
               leading: Icon(Iconsax.folder_add4), // hoặc Icons.bar_chart
-              title: const Text('Quản lý Voucher'),
+              title: const Text('Quản lý Mã giảm giá'),
               onTap: () {
                 _navigateToVoucherManagement(context);
               },
@@ -177,7 +187,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.deepPurple, // Giữ màu bạn đã chọn
+        selectedItemColor: Colors.blue, // Giữ màu bạn đã chọn
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed, // Để label luôn hiển thị
         items: const [

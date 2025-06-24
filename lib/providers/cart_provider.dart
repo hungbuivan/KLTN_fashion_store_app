@@ -76,32 +76,42 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> addItemToCart(int productId, int quantity) async {
+  // ✅ HÀM ĐÃ ĐƯỢC CẬP NHẬT
+  Future<bool> addItemToCart(int productId, int quantity, {String? color, String? size}) async {
     if (authProvider.isGuest || authProvider.user == null) {
       _setErrorMessage("Vui lòng đăng nhập để thêm sản phẩm vào giỏ.");
-      notifyListeners(); // Thông báo lỗi
+      notifyListeners();
       return false;
     }
     final int userId = authProvider.user!.id;
 
     _setLoading(true);
     _setErrorMessage(null);
-    // notifyListeners(); // _setLoading đã gọi
 
     bool success = false;
     try {
       final url = Uri.parse('$_baseApiUrl/$userId/cart/items');
-      print("CartProvider: Thêm sản phẩm ID $productId (SL: $quantity) vào giỏ hàng cho user ID $userId");
+
+      // Tạo body cho request, bao gồm cả size và color
+      final Map<String, dynamic> requestBody = {
+        'productId': productId,
+        'quantity': quantity,
+        'color': color, // Có thể null
+        'size': size,   // Có thể null
+      };
+
+      print("CartProvider: Thêm sản phẩm vào giỏ hàng: ${jsonEncode(requestBody)}");
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({'productId': productId, 'quantity': quantity}),
+        body: jsonEncode(requestBody), // Gửi body đã có size và color
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        await fetchCart(); // fetchCart sẽ tự quản lý isLoading của nó và notify
+        // Sau khi thêm thành công, tải lại toàn bộ giỏ hàng để đảm bảo dữ liệu đồng bộ
+        await fetchCart();
         success = true;
-        // _errorMessage đã được đặt là null
       } else {
         final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         _setErrorMessage("Lỗi thêm vào giỏ hàng: ${responseData['message'] ?? response.reasonPhrase}");
@@ -112,7 +122,7 @@ class CartProvider with ChangeNotifier {
       print("CartProvider: Lỗi addItemToCart: $e");
       success = false;
     } finally {
-      _setLoading(false); // ✅ Luôn đặt lại isLoading và thông báo ở cuối
+      _setLoading(false);
     }
     return success;
   }

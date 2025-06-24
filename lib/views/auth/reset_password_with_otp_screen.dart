@@ -74,7 +74,7 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
       backgroundColor: kPrimaryScreenColor,
       appBar: AppBar(
         title: const Text(
-          "Reset Password!",
+          "Quên mật khẩu!",
           style: TextStyle(color: kTextColor, fontSize: 18, fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.transparent, // Nền trong suốt
@@ -91,7 +91,7 @@ class _ResetPasswordWithOtpScreenState extends State<ResetPasswordWithOtpScreen>
               Navigator.pushReplacementNamed(context, '/login');
             },
             child: Text(
-              "Close",
+              "Đóng",
               style: TextStyle(color: kAppBarActionColor, fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),

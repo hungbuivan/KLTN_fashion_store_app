@@ -7,7 +7,8 @@ class OrderItemModel {
   final int quantity;
   final double? priceAtPurchase; // Giá của một sản phẩm tại thời điểm mua
   final double? subTotal;        // Thành tiền (quantity * priceAtPurchase)
-
+  final String? color;
+  final String? size;
   OrderItemModel({
     this.productId,
     required this.productName,
@@ -15,6 +16,8 @@ class OrderItemModel {
     required this.quantity,
     this.priceAtPurchase,
     this.subTotal,
+    this.color,
+    this.size,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +44,9 @@ class OrderItemModel {
       quantity: _parseInt(json['quantity']) ?? 1, // Mặc định là 1 nếu null
       priceAtPurchase: _parseDouble(json['priceAtPurchase']),
       subTotal: _parseDouble(json['subTotal']),
+      color: json['color'],
+      size: json['size'],
+
     );
   }
 
@@ -52,6 +58,8 @@ class OrderItemModel {
       'quantity': quantity,
       'priceAtPurchase': priceAtPurchase,
       'subTotal': subTotal,
+      'color': color,
+      'size': size
     };
   }
 }

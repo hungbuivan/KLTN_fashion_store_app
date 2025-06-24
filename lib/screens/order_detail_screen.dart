@@ -3,22 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-
+import 'package:fashion_store_app/utils/formatter.dart';
 // Import các provider và model cần thiết
 import '../providers/order_provider.dart';
 import '../models/order_detail_model.dart';
 import '../models/order_item_model.dart';
 
+
 // Import màn hình đánh giá sản phẩm (sẽ tạo sau)
 // import 'product_review_screen.dart';
 
 // Các hàm helper (bạn có thể đưa chúng vào file utils chung)
-final currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDigits: 0, name: '');
 
-String _formatCurrency(double? value) {
-  if (value == null) return "N/A";
-  return "${currencyFormatter.format(value)} VNĐ";
-}
 
 String _fixImageUrl(String? originalUrlFromApi) {
   const String serverBase = "http://10.0.2.2:8080";
@@ -48,15 +44,22 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  late Future<void> _fetchOrderDetailFuture;
+   Future<void>? _fetchOrderDetailFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchOrderDetailFuture = _loadOrderDetail();
-  }
+   @override
+   void initState() {
+     super.initState();
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       setState(() {
+         _fetchOrderDetailFuture = _loadOrderDetail();
+       });
+     });
+   }
 
-  Future<void> _loadOrderDetail() {
+
+
+
+   Future<void> _loadOrderDetail() {
     return Provider.of<OrderProvider>(context, listen: false)
         .fetchOrderDetailForUser(widget.orderId);
   }
@@ -120,44 +123,53 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chi tiết Đơn hàng #${widget.orderId}'),
-        elevation: 1,
-      ),
-      body: FutureBuilder(
-        future: _fetchOrderDetailFuture,
-        builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return Consumer<OrderProvider>(
-              builder: (ctx, orderProvider, child) {
-                if (orderProvider.isLoading && orderProvider.currentOrderDetail == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+   @override
+   Widget build(BuildContext context) {
+     return Scaffold(
+       appBar: AppBar(
+         title: Text('Chi tiết Đơn hàng #${widget.orderId}'),
+         elevation: 1,
+       ),
+       body: _fetchOrderDetailFuture == null
+           ? const Center(child: CircularProgressIndicator())
+           : FutureBuilder(
+         future: _fetchOrderDetailFuture,
+         builder: (ctx, snapshot) {
+           if (snapshot.connectionState == ConnectionState.waiting) {
+             return const Center(child: CircularProgressIndicator());
+           } else {
+             return Consumer<OrderProvider>(
+               builder: (ctx, orderProvider, child) {
+                 if (orderProvider.isLoading &&
+                     orderProvider.currentOrderDetail == null) {
+                   return const Center(child: CircularProgressIndicator());
+                 }
 
-                if (orderProvider.errorMessage != null && orderProvider.currentOrderDetail == null) {
-                  return Center(child: Text(orderProvider.errorMessage!));
-                }
+                 if (orderProvider.errorMessage != null &&
+                     orderProvider.currentOrderDetail == null) {
+                   return Center(
+                       child: Text(orderProvider.errorMessage!));
+                 }
 
-                final order = orderProvider.currentOrderDetail;
-                if (order == null) {
-                  return const Center(child: Text('Không tìm thấy thông tin đơn hàng.'));
-                }
+                 final order = orderProvider.currentOrderDetail;
+                 if (order == null) {
+                   return const Center(
+                       child: Text('Không tìm thấy thông tin đơn hàng.'));
+                 }
 
-                return _buildOrderDetailContent(context, order, orderProvider.isUpdatingStatus);
-              },
-            );
-          }
-        },
-      ),
-    );
-  }
+                 return _buildOrderDetailContent(
+                     context, order, orderProvider.isUpdatingStatus);
+               },
+             );
+           }
+         },
+       ),
+     );
+   }
 
-  Widget _buildOrderDetailContent(BuildContext context, OrderDetailModel order, bool isUpdatingStatus) {
+
+
+   Widget _buildOrderDetailContent(BuildContext context, OrderDetailModel order, bool isUpdatingStatus) {
     final statusInfo = _getStatusInfo(order.status);
 
     return SingleChildScrollView(
@@ -208,16 +220,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             title: 'Chi tiết Thanh toán',
             child: Column(
               children: [
-                _buildPriceDetailRow('Tổng tiền hàng:', _formatCurrency(order.subtotalAmount)),
-                _buildPriceDetailRow('Phí vận chuyển:', _formatCurrency(order.shippingFee)),
+                _buildPriceDetailRow('Tổng tiền hàng:', currencyFormatter.format(order.subtotalAmount)),
+                _buildPriceDetailRow('Phí vận chuyển:', currencyFormatter.format(order.shippingFee)),
                 if (order.voucherDiscountAmount != null && order.voucherDiscountAmount! > 0)
                   _buildPriceDetailRow(
                       'Giảm giá (${order.appliedVoucherCode ?? ''}):',
-                      '-${_formatCurrency(order.voucherDiscountAmount)}',
+                      '-${currencyFormatter.format(order.voucherDiscountAmount)}',
                       color: Colors.green.shade700
                   ),
                 const Divider(thickness: 1, height: 20),
-                _buildPriceDetailRow('Tổng cộng:', _formatCurrency(order.totalAmount), isTotal: true),
+                _buildPriceDetailRow('Tổng cộng:', currencyFormatter.format(order.totalAmount), isTotal: true),
               ],
             ),
           ),
@@ -252,12 +264,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
+
+              // ✅ THÊM WIDGET HIỂN THỊ SIZE/COLOR VÀO ĐÂY
+              if ((item.size != null && item.size!.isNotEmpty) || (item.color != null && item.color!.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    // Ghép chuỗi, chỉ hiển thị phần có giá trị
+                    'Phân loại: ${item.color ?? ''}${ (item.color != null && item.size != null) ? ' / ' : '' }${item.size ?? ''}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                ),
+
               Text('SL: ${item.quantity}', style: TextStyle(color: Colors.grey[600])),
             ],
           ),
         ),
         const SizedBox(width: 12),
-        Text(_formatCurrency(item.priceAtPurchase), style: const TextStyle(fontWeight: FontWeight.w500)),
+        Text(currencyFormatter.format(item.priceAtPurchase), style: const TextStyle(fontWeight: FontWeight.w500)),
       ],
     );
   }
