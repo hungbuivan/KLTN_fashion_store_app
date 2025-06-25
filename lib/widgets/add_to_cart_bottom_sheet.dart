@@ -87,8 +87,10 @@ class _AddToCartBottomSheetState extends State<AddToCartBottomSheet> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
+                // ✅ SỬA LỖI Ở ĐÂY
+                // Lấy ảnh đầu tiên từ danh sách imageUrls
                 child: Image.network(
-                  _fixImageUrl(widget.product.imageUrl?.isNotEmpty == true ? widget.product.imageUrl : null),
+                  _fixImageUrl(widget.product.imageUrls.isNotEmpty ? widget.product.imageUrls.first : null),
                   width: 90,
                   height: 90,
                   fit: BoxFit.cover,
@@ -180,7 +182,7 @@ class _AddToCartBottomSheetState extends State<AddToCartBottomSheet> {
               }
                   : null, // Vô hiệu hóa nút nếu chưa chọn đủ
               style: ElevatedButton.styleFrom(
-                backgroundColor: canAddToCart ? const Color(0xFFEE4D2D) : Colors.grey.shade400, // Màu cam/đỏ giống Shopee
+                backgroundColor: canAddToCart ?  Colors.blue : Colors.grey.shade400, // Màu cam/đỏ giống Shopee
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -211,15 +213,15 @@ class _AddToCartBottomSheetState extends State<AddToCartBottomSheet> {
             onSelected(choice); // Luôn chọn, không cho bỏ chọn
           },
           labelStyle: TextStyle(
-            color: isSelected ? const Color(0xFFEE4D2D) : Colors.black87,
+            color: isSelected ? Colors.blue : Colors.black87,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
           backgroundColor: Colors.white,
-          selectedColor: Colors.red.shade50,
+          selectedColor: Colors.blue.shade50,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(
-              color: isSelected ? const Color(0xFFEE4D2D) : Colors.grey.shade300,
+              color: isSelected ? Colors.blue: Colors.grey.shade300,
               width: 1.5,
             ),
           ),

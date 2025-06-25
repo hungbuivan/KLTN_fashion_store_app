@@ -12,7 +12,7 @@ class ProductAdminModel {
   final String? categoryName; // Có thể thêm nếu backend trả về và bạn muốn hiển thị
   final int? brandId;
   final String? brandName; // Có thể thêm
-  final String? imageUrl;
+  final List<String> imageUrls; // ✅ Sửa từ String? imageUrl thành List<String>
   final bool? isPopular;
   final bool? isFavorite; // Xem xét có cần ở đây không
   final DateTime? createdAt;
@@ -30,7 +30,7 @@ class ProductAdminModel {
      this.categoryName,
     this.brandId,
     this.brandName,
-    this.imageUrl,
+    required this.imageUrls, // ✅ Cập nhật constructor
     this.isPopular,
     this.isFavorite,
     this.createdAt,
@@ -46,6 +46,16 @@ class ProductAdminModel {
       parsedVariants = (json['variants'] as List)
           .map((variantJson) => ProductVariantAdminModel.fromJson(variantJson as Map<String, dynamic>))
           .toList();
+    }
+
+    // ✅ Logic mới để parse danh sách imageUrls
+    List<String> parsedImageUrls = [];
+    if (json['imageUrls'] != null && json['imageUrls'] is List) {
+      // Nếu backend trả về một danh sách
+      parsedImageUrls = List<String>.from(json['imageUrls']);
+    } else if (json['imageUrl'] != null) {
+      // Hỗ trợ cho dữ liệu cũ chỉ có một ảnh
+      parsedImageUrls.add(json['imageUrl'] as String);
     }
 
     print("📦 Parsing ProductAdminModel from JSON: $json");
@@ -64,7 +74,7 @@ class ProductAdminModel {
       categoryName: json['categoryName'] as String?,
       brandId: json['brandId'] as int?,
       brandName: json['brandName'] as String?,
-      imageUrl: json['imageUrl'] as String?,
+      imageUrls: parsedImageUrls, // ✅ Gán danh sách đã parse
       isPopular: json['isPopular'] as bool?,
       isFavorite: json['isFavorite'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
@@ -85,7 +95,7 @@ class ProductAdminModel {
       'stock': stock,
       'categoryId': categoryId, // Sẽ là null nếu không chọn
       'brandId': brandId,     // Sẽ là null nếu không chọn
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls, // Gửi luôn cả danh sách ảnh lên backend
       'isPopular': isPopular ?? false, // Mặc định là false nếu null
     };
   }

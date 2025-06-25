@@ -21,6 +21,46 @@ class ProductProvider with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // ✅ THÊM STATE MỚI CHO SẢN PHẨM PHỔ BIẾN
+  List<ProductSummaryModel> _popularProducts = [];
+  List<ProductSummaryModel> get popularProducts => _popularProducts;
+  bool _isLoadingPopular = false;
+  bool get isLoadingPopular => _isLoadingPopular;
+  String? _errorPopularMessage;
+  String? get errorPopularMessage => _errorPopularMessage;
+  // ✅ THÊM HÀM MỚI
+  Future<void> fetchPopularProducts() async {
+    _isLoadingPopular = true;
+    _errorPopularMessage = null;
+    notifyListeners();
+
+    try {
+      final uri = Uri.parse('$_baseUrl/popular');
+      print("ProductProvider: Fetching popular products from: $uri");
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(utf8.decode(response.bodyBytes));
+
+        // Sử dụng model mới để parse dữ liệu
+        _popularProducts = responseData
+            .map((json) => ProductSummaryModel.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+      } else {
+        _errorPopularMessage = "Lỗi tải sản phẩm phổ biến: ${response.statusCode}";
+      }
+    } catch (e) {
+      _errorPopularMessage = "Lỗi kết nối: ${e.toString()}";
+      print("ProductProvider: Error fetching popular products: $e");
+    }
+
+    _isLoadingPopular = false;
+    notifyListeners();
+  }
+
+
   // Hàm fetchProducts linh hoạt, có thể nhận các tham số lọc
   Future<void> fetchProducts({
     int page = 0,

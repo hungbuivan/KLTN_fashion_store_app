@@ -13,7 +13,8 @@ class ProductDetailModel {
   final String? brandName;
 
   // Giữ lại String? imageUrl vì bạn đã sửa theo hướng này
-  final String? imageUrl;
+  final List<
+      String> imageUrls; // ✅ Sửa từ String? imageUrl thành List<String> imageUrls
   final double? averageRating;
   final int? totalReviews;
   final List<String> availableColors;
@@ -33,7 +34,7 @@ class ProductDetailModel {
     this.categoryName,
     this.brandId,
     this.brandName,
-    this.imageUrl,
+    required this.imageUrls,
     this.averageRating,
     this.totalReviews,
     required this.availableColors,
@@ -44,19 +45,11 @@ class ProductDetailModel {
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
-    final List<dynamic> variantsJson = json['variants'] ?? [];
-
-    final Set<String> sizes = {};
-    final Set<String> colors = {};
-
-    for (var variant in variantsJson) {
-      if (variant is Map<String, dynamic>) {
-        final size = variant['size']?.toString();
-        final color = variant['color']?.toString();
-
-        if (size != null) sizes.add(size);
-        if (color != null) colors.add(color);
+    List<String> _parseStringList(dynamic listJson) {
+      if (listJson is List) {
+        return List<String>.from(listJson.map((item) => item.toString()));
       }
+      return [];
     }
 
     return ProductDetailModel(
@@ -70,11 +63,13 @@ class ProductDetailModel {
       categoryName: json['categoryName'] as String?,
       brandId: json['brandId'] as int?,
       brandName: json['brandName'] as String?,
-      imageUrl: json['imageUrl'] as String?,
+      imageUrls: _parseStringList(json['imageUrls']),
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalReviews: json['totalReviews'] as int?,
-      availableColors: colors.toList(),
-      availableSizes: sizes.toList(),
+      availableColors: _parseStringList(json['availableColors']),
+      // ✅ Sửa ở đây
+      availableSizes: _parseStringList(json['availableSizes']),
+      // ✅ Và ở đây
       isPopular: json['isPopular'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(
           json['createdAt']) : null,

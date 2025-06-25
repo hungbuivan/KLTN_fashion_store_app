@@ -13,7 +13,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/product_detail_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../widgets/add_to_cart_bottom_sheet.dart';
-
+import 'package:fashion_store_app/utils/formatter.dart';
 // TODO: Import màn hình xem tất cả review (ví dụ: all_reviews_screen.dart)
 // import 'all_reviews_screen.dart';
 
@@ -191,14 +191,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // ✅ THÊM HÀM MỚI NÀY
-  SliverAppBar _buildSliverAppBar(BuildContext context,
-      ProductDetailModel product, AuthProvider authProvider, bool isFavorite) {
+  // ✅ HÀM NÀY ĐÃ ĐƯỢC CẬP NHẬT HOÀN TOÀN
+  SliverAppBar _buildSliverAppBar(BuildContext context, ProductDetailModel product, AuthProvider authProvider, bool isFavorite) {
+    final wishlistProvider = context.watch<WishlistProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final isFavorite = wishlistProvider.isProductInWishlist(product.id);
+
     return SliverAppBar(
-      expandedHeight: MediaQuery
-          .of(context)
-          .size
-          .height * 0.5,
+      expandedHeight: MediaQuery.of(context).size.height * 0.55,
       pinned: true,
       stretch: true,
       backgroundColor: Colors.white,
@@ -208,25 +208,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         onPressed: () => Navigator.of(context).pop(),
       ),
       actions: [
-        IconButton(icon: Icon(Iconsax.share, color: Colors.grey[800]),
-            tooltip: 'Chia sẻ',
-            onPressed: () {}),
+        IconButton(icon: Icon(Iconsax.share, color: Colors.grey[800]), onPressed: () {}),
         IconButton(
-          icon: Icon(isFavorite ? Iconsax.heart5 : Iconsax.heart,
-              color: isFavorite ? Colors.redAccent : Colors.grey[800]),
+          icon: Icon(isFavorite ? Iconsax.heart5 : Iconsax.heart, color: isFavorite ? Colors.redAccent : Colors.grey[800]),
           onPressed: () async {
-            if (authProvider.isGuest) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Vui lòng đăng nhập để yêu thích sản phẩm.')));
-              return;
-            }
-            final wishlistProviderActions = context.read<WishlistProvider>();
-            if (isFavorite) {
-              await wishlistProviderActions.removeFromWishlist(product.id);
-            }
-            else {
-              await wishlistProviderActions.addToWishlist(product.id);
-            }
+            if (authProvider.isGuest) { return; }
+            await context.read<WishlistProvider>().toggleWishlistItem(product.id);
           },
         ),
       ],
@@ -234,59 +221,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         background: Stack(
           alignment: Alignment.bottomCenter,
           children: [
-            if (product.imageUrl!.isNotEmpty)
+            // Sử dụng CarouselSlider để hiển thị nhiều ảnh
+            if (product.imageUrls.isNotEmpty)
               Hero(
                 tag: 'product_image_${product.id}',
                 child: cs.CarouselSlider.builder(
                   carouselController: _controller,
-                  // Đảm bảo đây là kiểu cs.CarouselController
-                  itemCount: product.imageUrl?.length ?? 0,
+                  itemCount: product.imageUrls.length,
                   itemBuilder: (context, index, realIndex) {
                     return Image.network(
-                      _fixImageUrl(product.imageUrl![index]),
+                      _fixImageUrl(product.imageUrls[index]),
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      errorBuilder: (context, error, stackTrace) =>
-                      const Center(
-                        child: Icon(
-                          Iconsax.gallery_slash,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                      ),
+                      errorBuilder: (c, e, s) => const Center(child: Icon(Iconsax.gallery_slash, size: 80, color: Colors.grey)),
                     );
                   },
                   options: cs.CarouselOptions(
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.55,
+                    height: MediaQuery.of(context).size.height * 0.6,
                     viewportFraction: 1.0,
-                    enableInfiniteScroll: product.imageUrl!.length > 1,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
-                    },
+                    enableInfiniteScroll: product.imageUrls.length > 1,
+                    onPageChanged: (index, reason) => setState(() => _currentImageIndex = index),
                   ),
                 ),
               )
-
             else
-              Container(color: Colors.grey[200],
-                  child: const Center(child: Icon(
-                      Iconsax.gallery_slash, size: 80, color: Colors.grey))),
-            if (product.imageUrl!.length > 1)
+              Container(color: Colors.grey[200], child: const Center(child: Icon(Iconsax.gallery_slash, size: 80, color: Colors.grey))),
+
+            // Chỉ báo chấm tròn cho carousel
+            if (product.imageUrls.length > 1)
               Positioned(
                 bottom: 20.0,
                 child: AnimatedSmoothIndicator(
                   activeIndex: _currentImageIndex,
-                  count: product.imageUrl!.length,
+                  count: product.imageUrls.length,
                   effect: ExpandingDotsEffect(
                     dotHeight: 8, dotWidth: 8,
-                    activeDotColor: Theme
-                        .of(context)
-                        .primaryColor,
+                    activeDotColor: Theme.of(context).primaryColor,
                     dotColor: Colors.grey.shade400,
                   ),
                 ),
@@ -297,51 +267,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // ✅ THÊM HÀM MỚI NÀY
   Widget _buildSliverBody(BuildContext context, ProductDetailModel product) {
+    // ... (logic của hàm này giữ nguyên như trước)
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 40.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(product.brandName ?? product.categoryName ?? 'Thương hiệu',
-                style: TextStyle(
-                    color: Colors.grey[600], fontWeight: FontWeight.w500)),
+            Text(product.brandName ?? product.categoryName ?? 'Thương hiệu', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
-            // Phần tên sản phẩm và nút yêu thích đã chuyển lên SliverAppBar
-            Text(product.name, style: Theme
-                .of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(product.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            _buildPrice(context, product),
-
-            // Xóa phần chọn màu và size ở đây
-
+            Text(currencyFormatter.format(product.price ?? 0), style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
             const Divider(height: 40),
-
-            if (product.description != null &&
-                product.description!.isNotEmpty) ...[
-              Text("Mô tả sản phẩm", style: Theme
-                  .of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w600)),
+            if (product.description != null && product.description!.isNotEmpty) ...[
+              Text("Mô tả sản phẩm", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
-              Text(product.description!, style: TextStyle(
-                  fontSize: 15, color: Colors.grey[800], height: 1.6)),
-              const SizedBox(height: 20),
+              Text(product.description!, style: TextStyle(fontSize: 15, color: Colors.grey[800], height: 1.6)),
             ],
-
-            _buildRatingAndReviews(context, product),
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildRatingAndReviews(BuildContext context,
       ProductDetailModel product) {
@@ -489,10 +438,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             : const Icon(Iconsax.shopping_bag),
         label: Text(isCartLoading ? 'Đang thêm...' : 'Thêm vào giỏ hàng'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme
-              .of(context)
-              .colorScheme
-              .primary,
+          backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
