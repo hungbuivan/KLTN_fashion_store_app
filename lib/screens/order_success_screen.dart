@@ -89,10 +89,14 @@ class OrderSuccessScreen extends StatelessWidget {
               // Nút quay lại trang chủ
               OutlinedButton(
                 onPressed: () {
-                  // Chuyển về tab Trang chủ và quay về màn hình Home
                   context.read<BottomNavProvider>().changeTab(0);
-                  Navigator.of(context).popUntil((route) => route.settings.name == '/home' );
+
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/home',
+                        (Route<dynamic> route) => false, // Xoá hết stack và về trang home
+                  );
                 },
+
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: Colors.grey.shade400),

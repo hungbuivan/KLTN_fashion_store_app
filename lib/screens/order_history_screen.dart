@@ -215,6 +215,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           '${order.totalQuantityOfItems} sản phẩm',
                           style: TextStyle(color: Colors.grey[600], fontSize: 13),
                         ),
+
+                        // ✅ THÊM WIDGET HIỂN THỊ SIZE/COLOR VÀO ĐÂY
+                        if ((order.firstProductSize != null && order.firstProductSize!.isNotEmpty) || (order.firstProductColor != null && order.firstProductColor!.isNotEmpty))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              'Phân loại: ${order.firstProductColor ?? ''}${ (order.firstProductColor != null && order.firstProductSize != null) ? ', ' : '' }${order.firstProductSize ?? ''}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            ),
+                          ),
                         const SizedBox(height: 8),
                         Row(
                           children: [

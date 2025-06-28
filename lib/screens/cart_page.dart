@@ -32,19 +32,29 @@ class _CartPageState extends State<CartPage> {
 
   // ✅ THÊM HÀM fixImageUrl VÀO ĐÂY
   String _fixImageUrl(String? originalUrlFromApi) {
-    const String imageBaseUrl = 'http://10.0.2.2:8080/images/products/'; // Hoặc IP máy bạn
+    const String baseUrl = 'http://10.0.2.2:8080';
+
     if (originalUrlFromApi == null || originalUrlFromApi.isEmpty) {
-      return ''; // Hoặc URL ảnh placeholder
+      return ''; // hoặc trả về ảnh mặc định
     }
+
     if (originalUrlFromApi.startsWith('http://') || originalUrlFromApi.startsWith('https://')) {
-      // Xử lý trường hợp localhost nếu backend trả về localhost
+      // Nếu là localhost thì thay bằng 10.0.2.2
       if (originalUrlFromApi.contains('://localhost:8080')) {
-        return originalUrlFromApi.replaceFirst('://localhost:8080', 'http://10.0.2.2:8080');
+        return originalUrlFromApi.replaceFirst('://localhost:8080', '$baseUrl');
       }
       return originalUrlFromApi;
     }
-    return imageBaseUrl + originalUrlFromApi;
+
+    // Nếu là path nội bộ như /images/products/abc.jpg
+    if (originalUrlFromApi.startsWith('/')) {
+      return '$baseUrl$originalUrlFromApi';
+    }
+
+    // Nếu chỉ là tên file, ví dụ abc.jpg
+    return '$baseUrl/images/products/$originalUrlFromApi';
   }
+
 
 
   void _updateQuantity(BuildContext context, CartItemModel item, int newQuantity) {
@@ -187,18 +197,10 @@ class _CartPageState extends State<CartPage> {
                   width: 80, height: 80,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
-                    // ✅ SỬ DỤNG _fixImageUrl
-                    child: (item.productImageUrl != null && item.productImageUrl!.isNotEmpty)
-                        ? Image.network(
-                      _fixImageUrl(item.productImageUrl!), // Gọi hàm fix
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, st) => Container(color: Colors.grey[200], child: const Icon(Iconsax.gallery_slash, color: Colors.grey)),
-                      loadingBuilder: (ctx, child, loadingProgress){
-                        if(loadingProgress == null) return child;
-                        return Center(child: CircularProgressIndicator(strokeWidth: 2.0, value: loadingProgress.expectedTotalBytes != null ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes! : null ));
-                      },
-                    )
-                        : Container(color: Colors.grey[200], child: const Icon(Iconsax.box_1, color: Colors.grey)),
+                    // ✅ SỬA LỖI Ở ĐÂY
+                    child: Image.network(_fixImageUrl(item.productImageUrl))
+
+
                   ),
                 ),
                 const SizedBox(width: 12),

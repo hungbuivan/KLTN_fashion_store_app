@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart'; // Cho icon
 import '../providers/wishlist_provider.dart';
+import '../utils/formatter.dart';
 // Import ProductDetailScreen để điều hướng khi nhấn vào sản phẩm
 // import 'product_detail_screen.dart'; // Bạn cần có màn hình này
 
@@ -28,6 +29,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
       }
     });
   }
+
+  String _fixImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl.startsWith('http')) return imageUrl;
+    if (imageUrl.startsWith('/images/products/')) {
+      return 'http://10.0.2.2:8080$imageUrl';
+    }
+    return 'http://10.0.2.2:8080/images/products/$imageUrl';
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -101,21 +112,47 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 borderRadius: BorderRadius.circular(8.0),
                 child: item.productImageUrl != null && item.productImageUrl!.isNotEmpty
                     ? Image.network(
-                  'http://10.0.2.2:8080/images/products/${item.productImageUrl!}',// ✅ Dùng trực tiếp vì đã là URL đầy đủ
+                  'http://10.0.2.2:8080${item.productImageUrl!}', // ✅ đúng với local server Android Emulator
                   fit: BoxFit.cover,
-                  errorBuilder: (ctx, err, st) => Container(color: Colors.grey[200], child: const Icon(Iconsax.gallery_slash, color: Colors.grey)),
-                  loadingBuilder: (ctx, child, progress) {
-                    if (progress == null) return child;
-                    return Center(child: CircularProgressIndicator(strokeWidth: 2, value: progress.expectedTotalBytes != null ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes! : null));
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Iconsax.gallery_slash, color: Colors.grey),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
                   },
                 )
-                    : Container(color: Colors.grey[200], child: const Icon(Iconsax.box_1, color: Colors.grey)),
+                    : Container(
+                  color: Colors.grey[200],
+                  child: const Icon(Iconsax.box_1, color: Colors.grey),
+                ),
               ),
+
             ),
-            title: Text(item.productName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            title: Text(
+              item.productName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             subtitle: Text(
-              item.productPrice != null ? '${item.productPrice?.toStringAsFixed(0)} VND' : 'N/A',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 14, fontWeight: FontWeight.w500),
+              item.productPrice != null
+                  ? currencyFormatter.format(item.productPrice)
+                  : 'N/A',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             trailing: IconButton(
               icon: const Icon(Iconsax.heart_remove, color: Colors.redAccent),

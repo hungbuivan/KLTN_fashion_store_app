@@ -15,6 +15,7 @@ import '../../models/product_detail_model.dart';
 import '../../utils/formatter.dart';
 import '../views/home/product_details_screen.dart';
 import 'add_to_cart_bottom_sheet.dart';
+import 'navigation_menu.dart';
 
 class PopularSection extends StatefulWidget {
   const PopularSection({super.key});
@@ -50,8 +51,14 @@ class _PopularSectionState extends State<PopularSection> {
               Text("Sản phẩm phổ biến", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               TextButton(
                 onPressed: () {
-                  // Chuyển sang tab "Danh mục" (index = 1)
-                  context.read<BottomNavProvider>().changeTab(1);
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NavigationMenu(selectedIndex: 1),
+                      ),
+                    );
+                  };
                 },
                 child: const Text("Xem tất cả"),
               ),

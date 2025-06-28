@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 // Import các model và provider cần thiết
 import '../../../models/admin/product_admin_model.dart';
 import '../../../models/admin/product_variant_admin_model.dart';
+import '../../../providers/brand_admin_provider.dart';
+import '../../../providers/category_admin_provider.dart';
 import '../../../providers/product_admin_provider.dart';
 
 // Class helper để quản lý state của mỗi dòng variant trên UI
@@ -74,10 +76,23 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   List<VariantInputData> _variantRows = [];
   int _nextVariantId = 0;
 
+
+
+
   @override
   void initState() {
     super.initState();
     _isEditMode = widget.product != null;
+
+    // ✅ Gán giá trị ban đầu cho dropdown khi edit
+    _selectedCategoryId = widget.product?.categoryId;
+    _selectedBrandId = widget.product?.brandId;
+
+    // ✅ Gọi provider để tải danh sách
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CategoryAdminProvider>().fetchAllCategories();
+      context.read<BrandAdminProvider>().fetchAllBrands();
+    });
 
     if (widget.product != null) {
       final p = widget.product!;
@@ -198,6 +213,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       }
     }
 
+    // ✅ Thêm categoryId và brandId vào map dữ liệu
+    final Map<String, dynamic> productData = {
+      'name': _nameController.text.trim(),
+      // ... (các trường khác)
+      'categoryId': _selectedCategoryId,
+      'brandId': _selectedBrandId,
+      'variants': variantsData,
+    };
+
     if (mounted) {
       setState(() => _isSaving = false);
       if (resultProduct != null) {
@@ -210,6 +234,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    // ✅ Lấy dữ liệu từ provider để hiển thị trong dropdown
+    final categoryProvider = context.watch<CategoryAdminProvider>();
+    final brandProvider = context.watch<BrandAdminProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditMode ? 'Sửa Sản phẩm' : 'Thêm Sản phẩm Mới'),
@@ -232,6 +261,41 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               TextFormField(controller: _priceController, decoration: _inputDecoration('Giá gốc (VNĐ)', prefixIcon: Iconsax.money_2), keyboardType: TextInputType.number),
               const SizedBox(height: 16),
               // TODO: Thêm Dropdown cho Category và Brand ở đây
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _selectedCategoryId,
+                isExpanded: true,
+                decoration: _inputDecoration('Danh mục'),
+                hint: categoryProvider.isLoading ? const Text("Đang tải...") : const Text('Chọn danh mục'),
+                items: categoryProvider.categories.map((category) {
+                  return DropdownMenuItem<int>(
+                    value: category.id,
+                    child: Text(category.name),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() { _selectedCategoryId = value; });
+                },
+              ),
+
+              // ✅ THÊM DROPDOWN CHO BRAND
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                value: _selectedBrandId,
+                isExpanded: true,
+                decoration: _inputDecoration('Thương hiệu'),
+                hint: brandProvider.isLoading ? const Text("Đang tải...") : const Text('Chọn thương hiệu'),
+                items: brandProvider.brands.map((brand) {
+                  return DropdownMenuItem<int>(
+                    value: brand.id,
+                    child: Text(brand.name),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() { _selectedBrandId = value; });
+                },
+              ),
+
               SwitchListTile(title: const Text('Sản phẩm phổ biến?'), value: _isPopular, onChanged: (bool value) => setState(() => _isPopular = value), secondary: Icon(_isPopular ? Iconsax.star_1 : Iconsax.star, color: _isPopular ? Colors.amber : Colors.grey)),
               _buildSectionTitle("Hình ảnh sản phẩm"),
               const Text("Ảnh đầu tiên sẽ là ảnh đại diện.", style: TextStyle(color: Colors.grey, fontSize: 12)),

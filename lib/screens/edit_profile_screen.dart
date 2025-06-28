@@ -1,29 +1,23 @@
-// file: lib/screens/edit_profile_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../providers/edit_profile_provider.dart';
 import '../providers/auth_provider.dart';
 
-String _fixImageUrl(String? originalUrlFromApi) {
-  const String serverBase = "http://10.0.2.2:8080";
-  if (originalUrlFromApi == null || originalUrlFromApi.isEmpty) return '';
-  if (originalUrlFromApi.startsWith('http')) {
-    if (originalUrlFromApi.contains('://localhost:8080')) {
-      return originalUrlFromApi.replaceFirst('://localhost:8080', serverBase);
-    }
-    return originalUrlFromApi;
-  }
-  if (originalUrlFromApi.startsWith('/')) return serverBase + originalUrlFromApi;
-  return '$serverBase/images/avatars/$originalUrlFromApi';
-}
-
 class EditProfileScreen extends StatelessWidget {
   const EditProfileScreen({super.key});
   static const routeName = '/edit-profile';
+
+  // Hàm fix URL giống y như AllReviewsScreen
+  String _fixAvatarUrl(String? url) {
+    const String serverBase = "http://10.0.2.2:8080";
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return serverBase + url;
+    return '$serverBase/images/avatars/$url';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +25,11 @@ class EditProfileScreen extends StatelessWidget {
       create: (context) => EditProfileProvider(
         Provider.of<AuthProvider>(context, listen: false),
       ),
-      // ✅ SỬA LỖI 2: Cập nhật lại hàm update
       update: (context, auth, previous) {
         if (previous == null) return EditProfileProvider(auth);
 
-        // Cập nhật tham chiếu AuthProvider trong instance EditProfileProvider hiện có
         previous.authProvider = auth;
 
-        // Nếu user thay đổi, khởi tạo lại form với dữ liệu mới
         if (previous.authProvider.user?.id != auth.user?.id) {
           previous.initialize();
         }
@@ -58,6 +49,14 @@ class EditProfileView extends StatefulWidget {
 
 class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
+
+  String _fixAvatarUrl(String? url) {
+    const String serverBase = "http://10.0.2.2:8080";
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return serverBase + url;
+    return '$serverBase/images/avatars/$url';
+  }
 
   @override
   void initState() {
@@ -83,9 +82,8 @@ class _EditProfileViewState extends State<EditProfileView> {
         ),
       );
       if (success) {
-        // Tùy chọn: Tự động quay lại màn hình trước sau 1.5 giây
         Future.delayed(const Duration(milliseconds: 1500), () {
-          if(mounted) Navigator.of(context).pop();
+          if (mounted) Navigator.of(context).pop();
         });
       }
     }
@@ -104,7 +102,13 @@ class _EditProfileViewState extends State<EditProfileView> {
           provider.isLoading
               ? const Padding(
             padding: EdgeInsets.only(right: 16.0),
-            child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black54, strokeWidth: 2.5))),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: Colors.black54, strokeWidth: 2.5),
+              ),
+            ),
           )
               : IconButton(
             icon: const Icon(Iconsax.save_2),
@@ -131,11 +135,12 @@ class _EditProfileViewState extends State<EditProfileView> {
                         File(provider.pickedImageFile!.path),
                         fit: BoxFit.cover,
                       )
-                          : (user?.avt_url != null && user!.avt_url!.isNotEmpty)
+                          : (user?.avt_url != null && user!.avt_url.isNotEmpty)
                           ? Image.network(
-                        _fixImageUrl(user.avt_url),
+                        _fixAvatarUrl(user.avt_url),
                         fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => const Icon(Iconsax.user, size: 60, color: Colors.grey),
+                        errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Iconsax.user, size: 60, color: Colors.grey),
                       )
                           : const Icon(Iconsax.user, size: 60, color: Colors.grey),
                     ),
@@ -146,7 +151,10 @@ class _EditProfileViewState extends State<EditProfileView> {
                     child: Container(
                       width: 36,
                       height: 36,
-                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(100)),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
                       child: IconButton(
                         icon: const Icon(Iconsax.camera, color: Colors.white, size: 20),
                         onPressed: provider.pickImage,
@@ -154,13 +162,25 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                   ),
                   if (provider.pickedImageFile != null)
-                    Positioned(top: 0, right: 0, child: Container(width: 30, height: 30, decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(100)), child: IconButton(icon: const Icon(Iconsax.trash, color: Colors.white, size: 16), onPressed: provider.clearImage, tooltip: 'Xóa ảnh đã chọn'))),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(100)),
+                        child: IconButton(
+                          icon: const Icon(Iconsax.trash, color: Colors.white, size: 16),
+                          onPressed: provider.clearImage,
+                          tooltip: 'Xóa ảnh đã chọn',
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
-
               TextFormField(
                 controller: provider.fullNameController,
                 decoration: const InputDecoration(labelText: 'Họ và tên', prefixIcon: Icon(Iconsax.user)),
@@ -182,14 +202,17 @@ class _EditProfileViewState extends State<EditProfileView> {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 32),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: provider.isLoading ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                   child: provider.isLoading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white))
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
                       : const Text('Lưu thay đổi'),
                 ),
               ),

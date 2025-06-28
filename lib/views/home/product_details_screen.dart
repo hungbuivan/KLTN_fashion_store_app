@@ -14,6 +14,8 @@ import '../../providers/product_detail_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../widgets/add_to_cart_bottom_sheet.dart';
 import 'package:fashion_store_app/utils/formatter.dart';
+
+import '../../widgets/product_reviews_section.dart';
 // TODO: Import màn hình xem tất cả review (ví dụ: all_reviews_screen.dart)
 // import 'all_reviews_screen.dart';
 
@@ -285,6 +287,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Text("Mô tả sản phẩm", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(product.description!, style: TextStyle(fontSize: 15, color: Colors.grey[800], height: 1.6)),
+
+              // ✅ THÊM DÒNG NÀY ĐỂ HIỂN THỊ PHẦN ĐÁNH GIÁ
+              ProductReviewsSection(product: product),
+
             ],
           ],
         ),

@@ -1,7 +1,9 @@
 // file: lib/main.dart
 import 'package:fashion_store_app/providers/address_provider.dart';
 import 'package:fashion_store_app/providers/bottom_nav_provider.dart';
+import 'package:fashion_store_app/providers/brand_admin_provider.dart';
 import 'package:fashion_store_app/providers/cart_provider.dart';
+import 'package:fashion_store_app/providers/category_admin_provider.dart';
 import 'package:fashion_store_app/providers/category_provider.dart';
 import 'package:fashion_store_app/providers/dashboard_provider.dart';
 import 'package:fashion_store_app/providers/forgot_password_provider.dart';
@@ -9,12 +11,14 @@ import 'package:fashion_store_app/providers/payment_provider.dart';
 import 'package:fashion_store_app/providers/product_admin_provider.dart';
 import 'package:fashion_store_app/providers/product_detail_provider.dart';
 import 'package:fashion_store_app/providers/product_provider.dart';
+import 'package:fashion_store_app/providers/product_review_provider.dart';
 import 'package:fashion_store_app/providers/products_by_category_provider.dart';
 import 'package:fashion_store_app/providers/signup_provider.dart';
 import 'package:fashion_store_app/providers/stats_provider.dart';
 import 'package:fashion_store_app/providers/user_admin_provider.dart';
 import 'package:fashion_store_app/providers/voucher_admin_provider.dart';
 import 'package:fashion_store_app/providers/wishlist_provider.dart';
+import 'package:fashion_store_app/screens/add_review_screen.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
 import 'package:fashion_store_app/screens/cart_page.dart';
 import 'package:fashion_store_app/screens/checkout_screen.dart';
@@ -75,6 +79,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProductsByCategoryProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryAdminProvider()),
+        ChangeNotifierProvider(create: (_) => BrandAdminProvider()),
 
 
         ChangeNotifierProxyProvider<AuthProvider, WishlistProvider>(
@@ -137,7 +143,12 @@ class MyApp extends StatelessWidget {
           },
         ),
 
-
+    // ✅ THÊM PROXY PROVIDER MỚI VÀO ĐÂY
+    // ProductReviewProvider phụ thuộc vào AuthProvider
+        ChangeNotifierProxyProvider<AuthProvider, ProductReviewProvider>(
+          create: (context) => ProductReviewProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, authProvider, previous) => ProductReviewProvider(authProvider),
+        ),
 
 
 
@@ -217,6 +228,23 @@ class MyApp extends StatelessWidget {
               }
             }
             return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Lỗi: Order ID không hợp lệ'))));
+          }
+
+
+          // ✅ THÊM LOGIC NÀY
+          if (settings.name == AddReviewScreen.routeName) {
+            final args = settings.arguments as Map<String, dynamic>?;
+            if (args != null &&
+                args.containsKey('orderId') &&
+                args.containsKey('productToReview')) {
+
+              return MaterialPageRoute(
+                builder: (context) => AddReviewScreen(
+                  orderId: args['orderId'],
+                  productToReview: args['productToReview'],
+                ),
+              );
+            }
           }
 
           // Thêm logic để xử lý route cho ProductsByCategoryScreen

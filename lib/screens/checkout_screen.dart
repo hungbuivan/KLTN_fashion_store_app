@@ -188,20 +188,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  String fixImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
 
-  String fixImageUrl(String? originalUrlFromApi) {
-    const String imageBaseUrl = 'http://10.0.2.2:8080/images/products/';
-    if (originalUrlFromApi == null || originalUrlFromApi.isEmpty) {
-      return '';
-    }
-    if (originalUrlFromApi.startsWith('http://') || originalUrlFromApi.startsWith('https://')) {
-      if (originalUrlFromApi.contains('://localhost:8080')) {
-        return originalUrlFromApi.replaceFirst('://localhost:8080', '://10.0.2.2:8080');
-      }
-      return originalUrlFromApi;
-    }
-    return imageBaseUrl + originalUrlFromApi;
+    // Đổi IP nếu không chạy trên emulator
+    const String baseUrl = 'http://10.0.2.2:8080'; // Hoặc IP máy thật nếu test trên real device
+    return '$baseUrl/${url.startsWith('/') ? url.substring(1) : url}';
   }
+
+
+
 
   void _initializeScreenData() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -597,13 +594,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               width: 50,
               height: 50,
               child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.network(
-                      fixImageUrl(cartItem.productImageUrl), // Giả sử hàm _fixImageUrl đã tồn tại
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => const Icon(Iconsax.gallery_slash, size: 30)
-                  )
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(
+                  fixImageUrl(cartItem.productImageUrl),
+                  fit: BoxFit.cover,
+                  width: 60,
+                  height: 60,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Iconsax.gallery_slash, size: 30, color: Colors.grey),
+                ),
               )
+
           ),
           title: Text(cartItem.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w500)),
           subtitle: Column(

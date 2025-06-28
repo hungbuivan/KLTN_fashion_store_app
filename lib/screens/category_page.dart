@@ -79,7 +79,7 @@ class _CategoryPageState extends State<CategoryPage> with TickerProviderStateMix
                     indicatorColor: Theme.of(context).colorScheme.primary,
                     tabs: const [
                       Tab(text: 'Sản phẩm'),
-                      Tab(text: 'Thương hiệu'), // Hoặc Danh mục cha
+                      Tab(text: 'Danh mục'), // Hoặc Danh mục cha
                     ],
                   ),
                 ),

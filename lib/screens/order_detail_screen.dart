@@ -210,7 +210,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: order.items.length,
-              itemBuilder: (ctx, i) => _buildOrderItemTile(order.items[i]),
+              itemBuilder: (ctx, i) => _buildOrderItemTile(order.items[i], order),
               separatorBuilder: (ctx, i) => const Divider(height: 15),
             ),
           ),
@@ -247,49 +247,70 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   // Widget cho mỗi sản phẩm trong đơn hàng
-  Widget _buildOrderItemTile(OrderItemModel item) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 60, height: 60,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(_fixImageUrl(item.productImageUrl), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Iconsax.gallery_slash)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
+   Widget _buildOrderItemTile(OrderItemModel item, OrderDetailModel order) {
+     final bool canReview = order.status.toUpperCase() == 'DELIVERED' || order.status.toUpperCase() == 'COMPLETED';
 
-              // ✅ THÊM WIDGET HIỂN THỊ SIZE/COLOR VÀO ĐÂY
-              if ((item.size != null && item.size!.isNotEmpty) || (item.color != null && item.color!.isNotEmpty))
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Text(
-                    // Ghép chuỗi, chỉ hiển thị phần có giá trị
-                    'Phân loại: ${item.color ?? ''}${ (item.color != null && item.size != null) ? ' / ' : '' }${item.size ?? ''}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-                ),
+     return Column(
+       crossAxisAlignment: CrossAxisAlignment.start,
+       children: [
+         Row(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             SizedBox(
+               width: 60,
+               height: 60,
+               child: ClipRRect(
+                 borderRadius: BorderRadius.circular(8),
+                 child: Image.network(
+                   _fixImageUrl(item.productImageUrl),
+                   fit: BoxFit.cover,
+                   errorBuilder: (c, e, s) => const Icon(Iconsax.gallery_slash),
+                 ),
+               ),
+             ),
+             const SizedBox(width: 12),
+             Expanded(
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text(item.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                   if (item.size != null && item.size!.isNotEmpty) Text('Size: ${item.size}'),
+                   if (item.color != null && item.color!.isNotEmpty) Text('Màu: ${item.color}'),
+                   Text('SL: ${item.quantity}'),
+                 ],
+               ),
+             ),
+             const SizedBox(width: 12),
+             Text(currencyFormatter.format(item.priceAtPurchase), style: const TextStyle(fontWeight: FontWeight.w500)),
+           ],
+         ),
 
-              Text('SL: ${item.quantity}', style: TextStyle(color: Colors.grey[600])),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(currencyFormatter.format(item.priceAtPurchase), style: const TextStyle(fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
+         // Nút đánh giá
+         if (canReview)
+           Align(
+             alignment: Alignment.centerRight,
+             child: OutlinedButton(
+               onPressed: () {
+                 Navigator.of(context).pushNamed(
+                   '/add-review', // hoặc AddReviewScreen.routeName nếu bạn dùng const
+                   arguments: {
+                     'orderId': order.orderId,
+                     'productToReview': item,
+                   },
+                 );
+               },
+               child: const Text('Viết đánh giá'),
+             ),
+           ),
+       ],
+     );
+   }
 
-  // Widget cho các nút hành động của người dùng
+   // Widget cho các nút hành động của người dùng
   Widget _buildActionButtons(BuildContext context, OrderDetailModel order) {
     // Nút "Hủy đơn hàng"
     bool canCancel = order.status.toUpperCase() == 'PENDING' || order.status.toUpperCase() == 'CONFIRMED';
+    bool canReview = order.status.toUpperCase() == 'DELIVERED' || order.status.toUpperCase() == 'COMPLETED';
 
     // Nút "Đã nhận được hàng"
     bool canConfirmDelivery = order.status.toUpperCase() == 'SHIPPED';

@@ -46,25 +46,38 @@ class AppHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Ảnh đại diện
           CircleAvatar(
-            radius: 30, // Kích thước avatar
-            backgroundColor: Colors.grey.shade200, // Màu nền nếu ảnh có phần trong suốt
-            // Luôn hiển thị ảnh user.png mặc định
-            child: ClipOval( // Đảm bảo ảnh được cắt tròn
-              child: Image.asset(
-                "${imagePath}user.png", // Sử dụng đường dẫn từ constant.dart
-                width: 60, // Kích thước bằng 2 lần radius
+            radius: 30,
+            backgroundColor: Colors.grey.shade200,
+            child: ClipOval(
+              child: user?.avt_url != null && user!.avt_url.isNotEmpty
+                  ? Image.network(
+                user.avt_url,
+                width: 60,
                 height: 60,
-                fit: BoxFit.cover, // Đảm bảo ảnh lấp đầy CircleAvatar
+                fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  // Xử lý nếu ảnh user.png không tải được
-                  print("Lỗi load ảnh user.png trong AppHeader: $error");
-                  return const Icon(Iconsax.user_octagon, size: 30, color: Colors.grey); // Icon lỗi
+                  // Nếu load ảnh mạng bị lỗi thì hiện ảnh mặc định
+                  return Image.asset(
+                    "${imagePath}user.png",
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  );
+                },
+              )
+                  : Image.asset(
+                "${imagePath}user.png",
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Iconsax.user_octagon, size: 30, color: Colors.grey);
                 },
               ),
             ),
           ),
+
           const SizedBox(width: 12), // Khoảng cách giữa ảnh và chữ
 
           // Cột chứa văn bản chào

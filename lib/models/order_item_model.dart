@@ -44,8 +44,9 @@ class OrderItemModel {
       quantity: _parseInt(json['quantity']) ?? 1, // Mặc định là 1 nếu null
       priceAtPurchase: _parseDouble(json['priceAtPurchase']),
       subTotal: _parseDouble(json['subTotal']),
-      color: json['color'],
-      size: json['size'],
+      // ✅ Parse dữ liệu từ JSON
+      size: json['size'] as String?,
+      color: json['color'] as String?,
 
     );
   }

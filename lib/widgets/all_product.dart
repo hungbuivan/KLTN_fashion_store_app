@@ -1,6 +1,4 @@
 // file: lib/widgets/all_product.dart
-
-import 'package:fashion_store_app/widgets/navigation_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -11,9 +9,13 @@ import '../providers/wishlist_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/product_summary_model.dart';
+import '../models/product_detail_model.dart';
+// import '../screens/product_detail_screen.dart';
 import '../views/home/product_details_screen.dart';
-import '../widgets/add_to_cart_bottom_sheet.dart';
+import 'add_to_cart_bottom_sheet.dart';
 import '../utils/formatter.dart';
+import 'navigation_menu.dart';
+
 
 class AllProducts extends StatefulWidget {
   const AllProducts({super.key});
@@ -28,6 +30,7 @@ class _AllProductsState extends State<AllProducts> {
   @override
   void initState() {
     super.initState();
+    // Tải dữ liệu lần đầu
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshProducts();
     });
@@ -42,19 +45,16 @@ class _AllProductsState extends State<AllProducts> {
   }
 
   void _onScroll() {
-    final provider = Provider.of<ProductProvider>(context, listen: false);
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 300 &&
-        provider.pageData != null &&
-        !provider.pageData!.last &&
-        !provider.isLoading) {
-      provider.fetchProducts(page: provider.pageData!.number + 1);
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+      final provider = Provider.of<ProductProvider>(context, listen: false);
+      if (provider.pageData != null && !provider.pageData!.last && !provider.isLoading) {
+        provider.fetchProducts(page: provider.pageData!.number + 1);
+      }
     }
   }
 
   Future<void> _refreshProducts() async {
-    await Provider.of<ProductProvider>(context, listen: false).fetchProducts(
-        page: 0);
+    await Provider.of<ProductProvider>(context, listen: false).fetchProducts(page: 0);
   }
 
   @override
@@ -66,95 +66,77 @@ class _AllProductsState extends State<AllProducts> {
         }
 
         if (provider.errorMessage != null && provider.products.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(provider.errorMessage!),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _refreshProducts,
-                  child: const Text('Thử lại'),
-                ),
-              ],
-            ),
-          );
+          return Center(child: Text(provider.errorMessage!));
         }
 
         if (provider.products.isEmpty) {
           return const Center(child: Text('Không có sản phẩm nào.'));
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Tất cả sản phẩm",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NavigationMenu(selectedIndex: 1),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Xem tất cả",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.primary,
+        // ✅ SỬA LẠI CẤU TRÚC Ở ĐÂY
+        return RefreshIndicator(
+          onRefresh: _refreshProducts,
+          child: SingleChildScrollView( // Bọc toàn bộ bằng SingleChildScrollView
+            controller: _scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Thêm tiêu đề và nút "Xem tất cả"
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 8, top: 16, bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Tất cả sản phẩm",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                              builder: (context) => const NavigationMenu(selectedIndex: 1),
+                          ),
+                          );
+                        },
+                        child: const Text("Xem tất cả"),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            RefreshIndicator(
-              onRefresh: _refreshProducts,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(12.0),
-                itemCount: provider.products.length +
-                    (provider.pageData != null && !provider.pageData!.last ? 1 : 0),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12.0,
-                  mainAxisSpacing: 12.0,
-                  childAspectRatio: 0.65,
                 ),
-                itemBuilder: (context, index) {
-                  if (index == provider.products.length) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  }
-                  final product = provider.products[index];
-                  return ProductGridItem(product: product);
-                },
-              ),
+
+                // GridView hiển thị sản phẩm
+                GridView.builder(
+                  padding: const EdgeInsets.all(12.0),
+                  // Các thuộc tính này rất quan trọng khi GridView nằm trong SingleChildScrollView
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: provider.products.length + (provider.pageData != null && !provider.pageData!.last ? 1 : 0),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12.0,
+                    mainAxisSpacing: 12.0,
+                    childAspectRatio: 0.65,
+                  ),
+                  itemBuilder: (context, index) {
+                    if (index == provider.products.length) {
+                      return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator(strokeWidth: 2)));
+                    }
+                    final product = provider.products[index];
+                    return ProductGridItem(product: product);
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
-
 }
-  class ProductGridItem extends StatelessWidget {
+
+class ProductGridItem extends StatelessWidget {
   final ProductSummaryModel product;
   const ProductGridItem({super.key, required this.product});
 
@@ -166,7 +148,7 @@ class _AllProductsState extends State<AllProducts> {
       return url;
     }
     if (url.startsWith('/')) return serverBase + url;
-    return '$serverBase/images/products/$url';
+    return '$serverBase$url';
   }
 
   void _showAddToCartSheet(BuildContext context) async {
@@ -221,30 +203,24 @@ class _AllProductsState extends State<AllProducts> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Hình ảnh + nút yêu thích
           Expanded(
             child: Stack(
               children: [
                 Positioned.fill(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.of(context).pushNamed(
-                        ProductDetailScreen.routeName,
-                        arguments: {'productId': product.id},
-                      );
+                      Navigator.of(context).pushNamed(ProductDetailScreen.routeName, arguments: {'productId': product.id});
                     },
                     child: Hero(
                       tag: 'product_image_${product.id}',
                       child: Image.network(
                         _fixImageUrl(product.imageUrl),
                         fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, st) =>
-                        const Icon(Iconsax.gallery_slash, color: Colors.grey, size: 40),
+                        errorBuilder: (ctx, err, st) => const Icon(Iconsax.gallery_slash, color: Colors.grey, size: 40),
                       ),
                     ),
                   ),
                 ),
-                // Nút yêu thích
                 Positioned(
                   top: 6,
                   right: 6,
@@ -266,12 +242,10 @@ class _AllProductsState extends State<AllProducts> {
                           );
                           return;
                         }
-
-                        final wishlistActions = context.read<WishlistProvider>();
                         if (isFavorite) {
-                          await wishlistActions.removeFromWishlist(product.id);
+                          await context.read<WishlistProvider>().removeFromWishlist(product.id);
                         } else {
-                          await wishlistActions.addToWishlist(product.id);
+                          await context.read<WishlistProvider>().addToWishlist(product.id);
                         }
                       },
                     ),
@@ -280,7 +254,6 @@ class _AllProductsState extends State<AllProducts> {
               ],
             ),
           ),
-          // Thông tin + nút Mua
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -332,4 +305,3 @@ class _AllProductsState extends State<AllProducts> {
     );
   }
 }
-

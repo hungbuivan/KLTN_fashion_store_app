@@ -13,6 +13,9 @@ class OrderSummaryModel {
   final String? customerEmail; // Email khách hàng (cho Admin view)
   final String? appliedVoucherCode;
   final double? voucherDiscountAmount;
+// ✅ THÊM 2 TRƯỜNG MỚI
+  final String? firstProductSize;
+  final String? firstProductColor;
 
   OrderSummaryModel({
     required this.orderId,
@@ -26,6 +29,8 @@ class OrderSummaryModel {
     this.customerEmail,
     this.appliedVoucherCode,
     this.voucherDiscountAmount,
+    this.firstProductSize,
+    this.firstProductColor,
   });
 
   factory OrderSummaryModel.fromJson(Map<String, dynamic> json) {
@@ -72,6 +77,8 @@ class OrderSummaryModel {
       customerEmail: json['customerEmail'] as String?,
       appliedVoucherCode: json['appliedVoucherCode'] as String?,
       voucherDiscountAmount: _parseDouble(json['voucherDiscountAmount']),
+      firstProductSize: json['firstProductSize'] as String?,
+      firstProductColor: json['firstProductColor'] as String?,
     );
   }
 
