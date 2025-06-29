@@ -274,7 +274,11 @@ class _CartPageState extends State<CartPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(Iconsax.shopping_cart, size: 100, color: Colors.grey[400]),
+            Image.asset(
+              'assets/images/empty_cart.png', // 👈 THAY BẰNG ĐƯỜNG DẪN ẢNH CỦA BẠN
+              // height: 150, // Điều chỉnh kích thước
+              errorBuilder: (ctx, err, st) => Icon(Iconsax.box_remove, size: 100, color: Colors.grey[400]), // Fallback
+            ),
             const SizedBox(height: 24),
             const Text(
               'Giỏ hàng của bạn trống trơn',

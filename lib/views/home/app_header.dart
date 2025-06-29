@@ -3,49 +3,37 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
-import '../../providers/auth_provider.dart'; // ✅ Import AuthProvider (nơi chứa User model và trạng thái đăng nhập)
-import '../../core/theme/constant.dart';   // ✅ Import file chứa biến imagePath
+import '../../providers/auth_provider.dart';
+import '../../core/theme/constant.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../../screens/notification_screen.dart';
 
 class AppHeader extends StatelessWidget {
   const AppHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Lắng nghe thay đổi từ AuthProvider.
-    // Khi AuthProvider gọi notifyListeners(), widget này sẽ được build lại.
     final authProvider = context.watch<AuthProvider>();
-    final User? user = authProvider.user; // Lấy đối tượng User hiện tại (có thể null)
+    final User? user = authProvider.user;
 
-    // Xác định tên sẽ được hiển thị
-    String displayName = "Guest"; // Giá trị mặc định nếu là khách hoặc không có tên
-
-    if (user != null) { // Chỉ xử lý nếu người dùng đã đăng nhập (user object không null)
-      // Ưu tiên 1: user.fullName
-      if (user.fullName.isNotEmpty) { // Kiểm tra xem fullName có giá trị và không rỗng không
+    String displayName = "Guest";
+    if (user != null) {
+      if (user.fullName.isNotEmpty) {
         displayName = user.fullName;
-      }
-      // Ưu tiên 2 (fallback): user.username (từ json['name'] theo model của bạn)
-      // Chỉ dùng username nếu fullName rỗng hoặc không có
-      else if (user.username.isNotEmpty) {
+      } else if (user.username.isNotEmpty) {
         displayName = user.username;
+      } else if (user.email.isNotEmpty) {
+        displayName = "User";
       }
-      // Nếu cả fullName và username đều rỗng, có thể hiển thị một phần email hoặc "User"
-      else if (user.email.isNotEmpty) {
-        // displayName = user.email.split('@')[0]; // Lấy phần trước @ của email
-        displayName = "User"; // Hoặc một tên chung chung
-      }
-      // Nếu tất cả đều rỗng (ít khả năng nếu email là bắt buộc), displayName sẽ vẫn là "User"
     }
-
-    // Đường dẫn tới thư mục chứa ảnh (ví dụ: "assets/images/")
-    // Đảm bảo biến imagePath được định nghĩa đúng trong constant.dart
-    // Ví dụ: const String imagePath = "assets/images/";
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Avatar
           CircleAvatar(
             radius: 30,
             backgroundColor: Colors.grey.shade200,
@@ -57,7 +45,6 @@ class AppHeader extends StatelessWidget {
                 height: 60,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  // Nếu load ảnh mạng bị lỗi thì hiện ảnh mặc định
                   return Image.asset(
                     "${imagePath}user.png",
                     width: 60,
@@ -72,34 +59,34 @@ class AppHeader extends StatelessWidget {
                 height: 60,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Iconsax.user_octagon, size: 30, color: Colors.grey);
+                  return const Icon(Iconsax.user_octagon,
+                      size: 30, color: Colors.grey);
                 },
               ),
             ),
           ),
 
-          const SizedBox(width: 12), // Khoảng cách giữa ảnh và chữ
+          const SizedBox(width: 12),
 
-          // Cột chứa văn bản chào
-          Expanded( // Cho phép Text co giãn và xuống dòng nếu cần
+          // Chữ chào
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Canh chữ sang trái
-              mainAxisSize: MainAxisSize.min, // Cột chỉ chiếm chiều cao cần thiết
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Hiển thị "Hello, [Tên User]"
                 Text(
-                  "Xin chào, $displayName!", // Sử dụng displayName đã được xác định
+                  "Xin chào, $displayName!",
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
-                  maxLines: 1, // Chỉ hiển thị 1 dòng
-                  overflow: TextOverflow.ellipsis, // Thêm dấu ... nếu tên quá dài
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2), // Khoảng cách nhỏ
+                const SizedBox(height: 2),
                 const Text(
-                  "Ngày tốt để mua sắm!", // Dòng chào phụ
+                  "Ngày tốt để mua sắm!",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.black54,
@@ -108,26 +95,49 @@ class AppHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Không cần Spacer ở đây nếu Column trên đã là Expanded
 
-          // Các Icons ở cuối bên phải
-          IconButton(
-            icon: const Icon(Iconsax.notification, size: 28),
-            onPressed: () {
-              // TODO: Xử lý sự kiện nhấn nút thông báo
-              print("Nút Notification được nhấn");
-            },
-            tooltip: "Notifications",
-            color: Colors.grey[700],
-          ),
-          IconButton(
-            icon: const Icon(Iconsax.shopping_cart, size: 28),
-            onPressed: () {
-              // TODO: Xử lý sự kiện nhấn nút giỏ hàng
-              print("Nút Shopping Cart được nhấn");
-            },
-            tooltip: "Shopping Cart",
-            color: Colors.grey[700],
+          // ✅ Nhóm các icon vào một Row phụ
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ICON THÔNG BÁO
+              Consumer<NotificationProvider>(
+                builder: (context, notificationProvider, child) {
+                  return Badge(
+                    label: Text(notificationProvider.unreadCount.toString()),
+                    isLabelVisible: notificationProvider.unreadCount > 0,
+                    child: IconButton(
+                      icon: const Icon(Iconsax.notification, size: 28),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed(NotificationScreen.routeName);
+                      },
+                      tooltip: "Thông báo",
+                      color: Colors.grey[700],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 6),
+
+              // ICON GIỎ HÀNG
+              Consumer<CartProvider>(
+                builder: (context, cartProvider, child) {
+                  final itemCount = cartProvider.cart?.totalItems ?? 0;
+                  return Badge(
+                    label: Text(itemCount.toString()),
+                    isLabelVisible: itemCount > 0,
+                    child: IconButton(
+                      icon: const Icon(Iconsax.shopping_cart, size: 28),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('/cart');
+                      },
+                      tooltip: "Giỏ hàng",
+                      color: Colors.grey[700],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

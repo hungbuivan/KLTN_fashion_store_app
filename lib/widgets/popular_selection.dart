@@ -51,14 +51,14 @@ class _PopularSectionState extends State<PopularSection> {
               Text("Sản phẩm phổ biến", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               TextButton(
                 onPressed: () {
-                  onPressed: () {
+
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const NavigationMenu(selectedIndex: 1),
                       ),
                     );
-                  };
+
                 },
                 child: const Text("Xem tất cả"),
               ),

@@ -85,6 +85,48 @@ class OrderProvider with ChangeNotifier {
   bool get hasNextPage => _hasNextPage;
 
 
+  // ✅ CẬP NHẬT CONSTRUCTOR
+  OrderProvider({required this.authProvider, required this.cartProvider, required this.voucherProvider});
+  // ✅ HÀM MỚI: Thêm lại các sản phẩm từ một đơn hàng cũ vào giỏ hàng
+  Future repurchaseOrder(int orderId) async {
+    if (authProvider.isGuest || authProvider.user == null) {
+      _errorMessage = "Vui lòng đăng nhập để thực hiện chức năng này.";
+      return false;
+    }
+    // Có thể thêm một biến loading riêng nếu muốn
+// _isLoadingRepurchase = true;
+// notifyListeners();
+
+    _clearError();
+
+    try {
+      final url = Uri.parse('$_baseGeneralOrderUrl/$orderId/buy-again');
+      final response = await http.post(
+        url,
+        headers: await _getAuthHeaders(), // Giả sử hàm này thêm token xác thực
+      );
+
+      if (response.statusCode == 200) {
+        // Thêm vào giỏ hàng thành công ở backend.
+        // Bây giờ, hãy làm mới giỏ hàng ở client để cập nhật UI.
+        await cartProvider.fetchCart();
+
+        return true;
+      } else {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        _errorMessage = responseData['message'] ?? "Lỗi khi mua lại đơn hàng.";
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối: ${e.toString()}";
+      return false;
+    } finally {
+      // _isLoadingRepurchase = false;
+      // notifyListeners();
+    }
+
+  }
+
 
   // Lấy chi tiết một đơn hàng cho Admin
   Future<OrderDetailModel?> fetchOrderDetailForAdmin(int orderId) async {
@@ -137,16 +179,16 @@ class OrderProvider with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  OrderProvider({
-    required this.authProvider,
-    required this.cartProvider,
-    required this.voucherProvider,
-  }) {
-    // Tự động tải lịch sử đơn hàng của user nếu đã đăng nhập khi provider được tạo
-    // if (authProvider.isAuthenticated && authProvider.user != null) {
-    //   fetchUserOrders();
-    // }
-  }
+  // OrderProvider({
+  //   required this.authProvider,
+  //   required this.cartProvider,
+  //   required this.voucherProvider,
+  // }) {
+  //   // Tự động tải lịch sử đơn hàng của user nếu đã đăng nhập khi provider được tạo
+  //   // if (authProvider.isAuthenticated && authProvider.user != null) {
+  //   //   fetchUserOrders();
+  //   // }
+  // }
 
   // ✅ SỬA LỖI Ở ĐÂY: đổi tên tham số thành isStatusUpdate
   void _setLoading(bool loading, {bool isStatusUpdate = false}) {

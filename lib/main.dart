@@ -5,8 +5,10 @@ import 'package:fashion_store_app/providers/brand_admin_provider.dart';
 import 'package:fashion_store_app/providers/cart_provider.dart';
 import 'package:fashion_store_app/providers/category_admin_provider.dart';
 import 'package:fashion_store_app/providers/category_provider.dart';
+import 'package:fashion_store_app/providers/chat_provider.dart';
 import 'package:fashion_store_app/providers/dashboard_provider.dart';
 import 'package:fashion_store_app/providers/forgot_password_provider.dart';
+import 'package:fashion_store_app/providers/notification_provider.dart';
 import 'package:fashion_store_app/providers/payment_provider.dart';
 import 'package:fashion_store_app/providers/product_admin_provider.dart';
 import 'package:fashion_store_app/providers/product_detail_provider.dart';
@@ -20,14 +22,18 @@ import 'package:fashion_store_app/providers/voucher_admin_provider.dart';
 import 'package:fashion_store_app/providers/wishlist_provider.dart';
 import 'package:fashion_store_app/screens/add_review_screen.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
+import 'package:fashion_store_app/screens/admin/pages/admin_order_detail_screen.dart';
 import 'package:fashion_store_app/screens/cart_page.dart';
+import 'package:fashion_store_app/screens/chat_message_screen.dart';
 import 'package:fashion_store_app/screens/checkout_screen.dart';
 import 'package:fashion_store_app/screens/edit_profile_screen.dart';
+import 'package:fashion_store_app/screens/notification_screen.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/screens/order_history_screen.dart';
 import 'package:fashion_store_app/screens/order_success_screen.dart';
 import 'package:fashion_store_app/screens/product_screen.dart';
 import 'package:fashion_store_app/screens/products_by_category_screen.dart';
+import 'package:fashion_store_app/views/admin/admin_notifications.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
 import 'package:fashion_store_app/views/home/product_details_screen.dart';
@@ -150,6 +156,22 @@ class MyApp extends StatelessWidget {
           update: (context, authProvider, previous) => ProductReviewProvider(authProvider),
         ),
 
+        // ✅ THÊM PROXY PROVIDER MỚI VÀO ĐÂY
+        ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
+          create: (context) => NotificationProvider(Provider.of<AuthProvider>(context, listen: false)),
+          update: (context, auth, previous) {
+            previous?.authProvider = auth;
+            return previous ?? NotificationProvider(auth);
+          },
+        ),
+
+        ChangeNotifierProxyProvider<AuthProvider, ChatProvider>(
+          create: (context) => ChatProvider(
+            Provider.of<AuthProvider>(context, listen: false),
+          ),
+          update: (context, auth, previous) => ChatProvider(auth),
+        ),
+
 
 
       ],
@@ -176,7 +198,8 @@ class MyApp extends StatelessWidget {
           // '/cart': (context) => const CartPage(), // Nếu bạn đã có CartPage
           OrderHistoryScreen.routeName: (context) => const OrderHistoryScreen(), // Đăng ký route tĩnh
           EditProfileScreen.routeName: (context) => const EditProfileScreen(),
-
+          NotificationScreen.routeName: (context) => const NotificationScreen(),
+          AdminNotificationsScreen.routeName: (context) => const AdminNotificationsScreen(),
 
         },
         onGenerateRoute: (settings) {
@@ -246,6 +269,25 @@ class MyApp extends StatelessWidget {
               );
             }
           }
+          if (settings.name == ChatMessageScreen.routeName) {
+            if (settings.arguments != null && settings.arguments is Map<String, dynamic>) {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (_) => ChatMessageScreen(
+                  roomId: args['roomId'],
+                  userName: args['userName'],
+                ),
+              );
+            } else {
+              // Nếu không có arguments thì có thể trả về một trang lỗi hoặc thông báo
+              return MaterialPageRoute(
+                builder: (_) => const Scaffold(
+                  body: Center(child: Text("Lỗi: Thiếu dữ liệu phòng chat")),
+                ),
+              );
+            }
+          }
+
 
           // Thêm logic để xử lý route cho ProductsByCategoryScreen
           if (settings.name == ProductsByCategoryScreen.routeName) {
@@ -273,6 +315,9 @@ class MyApp extends StatelessWidget {
 
           return MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: const Text("Lỗi")),body: Center(child: Text('Lỗi 404: Trang không tồn tại - ${settings.name}'))));
         },
+
+
+
       ),
     );
   }

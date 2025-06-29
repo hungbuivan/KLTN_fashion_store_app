@@ -148,6 +148,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   Widget _buildOrderItemCard(BuildContext context, OrderSummaryModel order) {
     final statusInfo = _getStatusInfo(order.status);
+    final orderProvider = context.read<OrderProvider>();
+    // ✅ KIỂM TRA ĐIỀU KIỆN ĐỂ HIỂN THỊ NÚT
+    // Nút "Mua lại" chỉ hiện với các đơn hàng đã giao, hoàn thành, hoặc đã hủy.
+    final bool canRepurchase = ['COMPLETED', 'DELIVERED', 'CANCELLED_BY_USER', 'CANCELLED_BY_ADMIN'].contains(order.status);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -265,6 +269,46 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   ),
                 ],
               ),
+              // ✅ PHẦN HIỂN THỊ NÚT "MUA LẠI"
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Hiển thị trạng thái đơn hàng
+                  Text('Trạng thái: ${order.status}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+
+                  // Hiển thị nút nếu đủ điều kiện
+                  if (canRepurchase)
+                    OutlinedButton(
+                      onPressed: () async {
+                        final success = await orderProvider.repurchaseOrder(order.orderId);
+                        if (mounted) {
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã thêm các sản phẩm từ đơn hàng #${order.orderId} vào giỏ hàng.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(orderProvider.errorMessage ?? 'Mua lại thất bại.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text('Mua lại'),
+                    ),
+                ],
+              ),
+
             ],
           ),
         ),

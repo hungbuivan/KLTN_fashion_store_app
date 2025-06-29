@@ -22,7 +22,7 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   final TextEditingController _searchController = TextEditingController();
   String _currentSort = 'id,desc';
   int _currentPage = 0;
-  final int _pageSize = 10;
+  final int _pageSize = 100;
   bool _isLoadingMore = false;
 
   @override
@@ -43,12 +43,12 @@ class _ProductManagementPageState extends State<ProductManagementPage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
-      final provider = Provider.of<ProductAdminProvider>(context, listen: false);
-      if (provider.pageData != null && !provider.pageData!.last && !_isLoadingMore) {
-        _loadProducts(loadMore: true);
-      }
-    }
+    // if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+    //   final provider = Provider.of<ProductAdminProvider>(context, listen: false);
+    //   if (provider.pageData != null && !provider.pageData!.last && !_isLoadingMore) {
+    //     _loadProducts(loadMore: true);
+    //   }
+    // }
   }
 
   Future<void> _loadProducts({bool refresh = false, bool loadMore = false}) async {

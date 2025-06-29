@@ -5,7 +5,6 @@ import 'package:fashion_store_app/views/admin/order_management_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fashion_store_app/views/admin/admin_dashboard.dart';
 import 'package:fashion_store_app/views/admin/admin_notifications.dart';
-import 'package:fashion_store_app/views/admin/admin_messages.dart';
 import 'package:fashion_store_app/views/admin/admin_profile.dart';
 import 'package:fashion_store_app/views/admin/product_management_page.dart'; // Đã có
 // ✅ Import UserManagementPage (điều chỉnh đường dẫn nếu cần)
@@ -14,6 +13,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:provider/provider.dart';
 import 'package:fashion_store_app/providers/auth_provider.dart';
 
+import '../../providers/chat_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../../views/admin/chat_list_screen.dart';
 import '../../views/admin/user_management_page.dart';
 import 'package:fashion_store_app/views/admin/revenue_page.dart';
 
@@ -25,8 +27,8 @@ class AdminHomePage extends StatefulWidget {
   @override
   State<AdminHomePage> createState() => _AdminHomePageState();
 }
-
-class _AdminHomePageState extends State<AdminHomePage> {
+// ✅ THÊM `with WidgetsBindingObserver` ĐỂ GIỮ LẠI LOGIC CŨ
+class _AdminHomePageState extends State<AdminHomePage> with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   final List<String> _pageTitles = const [
@@ -36,17 +38,58 @@ class _AdminHomePageState extends State<AdminHomePage> {
     'Hồ sơ Admin',
   ];
 
-  final List<Widget> _pages = [
-    AdminDashboard(),
-    const AdminNotifications(),
-    const AdminMessages(),
-    const AdminProfile(),
-  ];
+  // ✅ SỬA LẠI DANH SÁCH PAGES ĐỂ TRUYỀN HÀM REFRESH
+  // Chúng ta sẽ khởi tạo nó trong initState
+  late final List<Widget> _pages;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _pages = [
+      AdminDashboard(),
+      AdminNotificationsScreen(onRefresh: _refreshData),
+      ChatListScreen(onRefresh: _refreshData), // ✅ Thay thế AdminMessages
+      const AdminProfile(),
+    ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshData();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // ✅ HÀM NÀY GIỮ NGUYÊN, DÙNG KHI APP ĐƯỢC RESUME
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      print("App resumed. Refreshing admin data...");
+      _refreshData();
+    }
+  }
+
+  // ✅ HÀM NÀY SẼ LÀM MỚI TẤT CẢ DỮ LIỆU CẦN THIẾT
+  Future<void> _refreshData() async {
+    await Future.wait([
+      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications(),
+      Provider.of<ChatProvider>(context, listen: false).fetchChatRoomsForAdmin(),
+    ]);
+  }
+
+  // ✅ CẬP NHẬT HÀM NÀY ĐỂ TỰ ĐỘNG LÀM MỚI
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    // Mỗi khi người dùng nhấn vào một tab, gọi hàm làm mới thông báo
+    // để huy hiệu (badge) luôn được cập nhật.
+    _refreshData();
   }
 
   // Hàm điều hướng đến trang Quản lý Sản phẩm
@@ -187,14 +230,39 @@ class _AdminHomePageState extends State<AdminHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.blue, // Giữ màu bạn đã chọn
+        selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed, // Để label luôn hiển thị
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Iconsax.chart_2), label: 'Trang chủ'), // Thay icon nếu muốn
-          BottomNavigationBarItem(icon: Icon(Iconsax.notification_bing), label: 'Thông báo'), // Thay icon
-          BottomNavigationBarItem(icon: Icon(Iconsax.message_text_1), label: 'Tin nhắn'), // Thay icon
-          BottomNavigationBarItem(icon: Icon(Iconsax.user_octagon), label: 'Tôi'), // Thay icon
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(icon: Icon(Iconsax.chart_2), label: 'Trang chủ'),
+          BottomNavigationBarItem(
+            icon: Consumer<NotificationProvider>(
+              builder: (context, notificationProvider, child) {
+                return Badge(
+                  isLabelVisible: notificationProvider.unreadCount > 0,
+                  label: Text(notificationProvider.unreadCount.toString()),
+                  child: child!,
+                );
+              },
+              child: const Icon(Iconsax.notification_bing),
+            ),
+            label: 'Thông báo',
+          ),
+          // ✅ HUY HIỆU TIN NHẮN
+          BottomNavigationBarItem(
+            icon: Consumer<ChatProvider>(
+              builder: (context, provider, child) {
+                return Badge(
+                  isLabelVisible: provider.totalUnreadRoomsCount > 0,
+                  label: Text(provider.totalUnreadRoomsCount.toString()),
+                  child: child!,
+                );
+              },
+              child: const Icon(Iconsax.message_text_1),
+            ),
+            label: 'Tin nhắn',
+          ),
+          const BottomNavigationBarItem(icon: Icon(Iconsax.user_octagon), label: 'Tôi'),
         ],
       ),
     );

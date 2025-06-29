@@ -1,32 +1,27 @@
-// file: lib/screens/admin/pages/admin_notifications_screen.dart
+// file: lib/screens/notification_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
-import '../../../providers/notification_provider.dart';
-import '../../../models/notification_model.dart';
-import '../../screens/admin/pages/admin_order_detail_screen.dart';
-import '../../screens/order_detail_screen.dart';
+import '../providers/notification_provider.dart';
+import '../models/notification_model.dart';
+import 'order_detail_screen.dart'; // Để điều hướng
 
-
-class AdminNotificationsScreen extends StatefulWidget {
-  final Future<void> Function()? onRefresh; // 👈 thêm dòng này
-  const AdminNotificationsScreen({super.key, this.onRefresh});
-  static const routeName = '/admin-notifications';
-
-
+class NotificationScreen extends StatefulWidget {
+  const NotificationScreen({super.key});
+  static const routeName = '/notifications';
 
   @override
-  State<AdminNotificationsScreen> createState() => _AdminNotificationsScreenState();
+  State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
+class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Tải lại thông báo khi màn hình được mở để đảm bảo dữ liệu mới nhất
+      // Tải thông báo khi màn hình được mở
       Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
     });
   }
@@ -35,7 +30,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo Admin'),
+        title: const Text('Thông báo'),
       ),
       body: Consumer<NotificationProvider>(
         builder: (context, provider, child) {
@@ -48,16 +43,13 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
           if (provider.notifications.isEmpty) {
             return const Center(child: Text('Bạn chưa có thông báo nào.'));
           }
-          return RefreshIndicator(
-            onRefresh: widget.onRefresh ?? provider.fetchNotifications,
-            child: ListView.separated(
-              itemCount: provider.notifications.length,
-              itemBuilder: (context, index) {
-                final notification = provider.notifications[index];
-                return _NotificationCard(notification: notification);
-              },
-              separatorBuilder: (context, index) => const Divider(height: 1),
-            ),
+          return ListView.separated(
+            itemCount: provider.notifications.length,
+            itemBuilder: (context, index) {
+              final notification = provider.notifications[index];
+              return _NotificationCard(notification: notification);
+            },
+            separatorBuilder: (context, index) => const Divider(height: 1),
           );
         },
       ),
@@ -92,17 +84,17 @@ class _NotificationCard extends StatelessWidget {
             ),
           ],
         ),
-          onTap: () {
-            context.read<NotificationProvider>().markAsRead(notification.id);
-            if (notification.orderId != null) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => AdminOrderDetailScreen(orderId: notification.orderId!),
-                ),
-              );
-            }
+        onTap: () {
+          // Đánh dấu là đã đọc
+          context.read<NotificationProvider>().markAsRead(notification.id);
+          // Nếu có orderId, điều hướng đến chi tiết đơn hàng
+          if (notification.orderId != null) {
+            Navigator.of(context).pushNamed(
+              OrderDetailScreen.routeName,
+              arguments: {'orderId': notification.orderId},
+            );
           }
-
+        },
       ),
     );
   }

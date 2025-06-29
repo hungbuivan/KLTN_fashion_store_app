@@ -49,7 +49,7 @@ class EditProfileView extends StatefulWidget {
 
 class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
-
+  final _passwordFormKey = GlobalKey<FormState>();
   String _fixAvatarUrl(String? url) {
     const String serverBase = "http://10.0.2.2:8080";
     if (url == null || url.isEmpty) return '';
@@ -89,6 +89,23 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
   }
 
+  // ✅ HÀM MỚI ĐỂ XỬ LÝ VIỆC ĐỔI MẬT KHẨU
+  Future<void> _changePassword() async {
+    final isValid = _passwordFormKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
+    final provider = context.read<EditProfileProvider>();
+    final success = await provider.changePassword();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? (success ? 'Đổi mật khẩu thành công!' : 'Đổi mật khẩu thất bại.')),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<EditProfileProvider>();
@@ -123,6 +140,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           key: _formKey,
           child: Column(
             children: [
+              // Avatar section
               Stack(
                 children: [
                   SizedBox(
@@ -131,10 +149,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(100),
                       child: provider.pickedImageFile != null
-                          ? Image.file(
-                        File(provider.pickedImageFile!.path),
-                        fit: BoxFit.cover,
-                      )
+                          ? Image.file(File(provider.pickedImageFile!.path), fit: BoxFit.cover)
                           : (user?.avt_url != null && user!.avt_url.isNotEmpty)
                           ? Image.network(
                         _fixAvatarUrl(user.avt_url),
@@ -178,9 +193,12 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                 ],
               ),
+
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
+
+              // Họ và tên
               TextFormField(
                 controller: provider.fullNameController,
                 decoration: const InputDecoration(labelText: 'Họ và tên', prefixIcon: Icon(Iconsax.user)),
@@ -190,29 +208,70 @@ class _EditProfileViewState extends State<EditProfileView> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // Email (read-only)
               TextFormField(
                 initialValue: user?.email,
                 decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Iconsax.sms)),
                 readOnly: true,
               ),
               const SizedBox(height: 16),
+
+              // Số điện thoại
               TextFormField(
                 controller: provider.phoneController,
                 decoration: const InputDecoration(labelText: 'Số điện thoại', prefixIcon: Icon(Iconsax.call)),
                 keyboardType: TextInputType.phone,
               ),
+              const SizedBox(height: 24),
+
+              // Đổi mật khẩu (không tách riêng)
+              TextFormField(
+                controller: provider.currentPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu hiện tại',
+                  prefixIcon: Icon(Iconsax.lock),
+                ),
+                obscureText: true,
+                validator: (v) => v == null || v.isEmpty ? 'Vui lòng nhập mật khẩu hiện tại' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: provider.newPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu mới',
+                  prefixIcon: Icon(Iconsax.lock_1),
+                ),
+                obscureText: true,
+                validator: (v) {
+                  if (v == null || v.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: provider.confirmPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Xác nhận mật khẩu mới',
+                  prefixIcon: Icon(Iconsax.shield_tick),
+                ),
+                obscureText: true,
+                validator: (v) {
+                  if (v != provider.newPasswordController.text) return 'Mật khẩu xác nhận không khớp.';
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 32),
+
+              // Nút lưu tất cả
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: provider.isLoading ? null : _saveProfile,
+                  onPressed: provider.isLoading || provider.isPasswordSaving ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: provider.isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
+                  child: provider.isLoading || provider.isPasswordSaving
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white))
                       : const Text('Lưu thay đổi'),
                 ),
               ),
@@ -222,4 +281,6 @@ class _EditProfileViewState extends State<EditProfileView> {
       ),
     );
   }
+
+
 }

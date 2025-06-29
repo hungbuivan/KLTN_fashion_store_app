@@ -65,7 +65,7 @@ class ProductProvider with ChangeNotifier {
   // Hàm fetchProducts linh hoạt, có thể nhận các tham số lọc
   Future<void> fetchProducts({
     int page = 0,
-    int size = 10,
+    int size = 100,
     String sort = 'createdAt,desc',
     String? searchTerm,
     int? categoryId,

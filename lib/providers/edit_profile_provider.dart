@@ -15,6 +15,11 @@ class EditProfileProvider with ChangeNotifier {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+   // ✅ THÊM CONTROLLERS CHO MẬT KHẨU
+   final TextEditingController currentPasswordController = TextEditingController();
+   final TextEditingController newPasswordController = TextEditingController();
+   final TextEditingController confirmPasswordController = TextEditingController();
+
   // Lưu trữ file ảnh đã chọn
   XFile? _pickedImageFile;
   XFile? get pickedImageFile => _pickedImageFile;
@@ -22,6 +27,9 @@ class EditProfileProvider with ChangeNotifier {
   // Trạng thái loading và message
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+   bool _isPasswordSaving = false; // State riêng cho việc lưu mật khẩu
+   bool get isPasswordSaving => _isPasswordSaving;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -116,6 +124,65 @@ class EditProfileProvider with ChangeNotifier {
      }
 
      return false;
+   }
+
+   // ✅ HÀM MỚI: ĐỂ THAY ĐỔI MẬT KHẨU
+   Future<bool> changePassword() async {
+     if (authProvider.user == null) {
+       _errorMessage = "Bạn cần đăng nhập để thực hiện việc này.";
+       notifyListeners();
+       return false;
+     }
+
+     _isPasswordSaving = true;
+     _errorMessage = null;
+     notifyListeners();
+
+     try {
+       final int userId = authProvider.user!.id;
+       final url = Uri.parse('http://10.0.2.2:8080/api/users/$userId/change-password');
+
+       final response = await http.post(
+         url,
+         headers: {'Content-Type': 'application/json; charset=UTF-8'},
+         body: jsonEncode({
+           'currentPassword': currentPasswordController.text,
+           'newPassword': newPasswordController.text,
+           'confirmPassword': confirmPasswordController.text,
+         }),
+       );
+
+       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+       if (response.statusCode == 200) {
+         _errorMessage = "Đổi mật khẩu thành công!";
+         // Xóa các trường mật khẩu sau khi thành công
+         currentPasswordController.clear();
+         newPasswordController.clear();
+         confirmPasswordController.clear();
+         _isPasswordSaving = false;
+         notifyListeners();
+         return true;
+       } else {
+         _errorMessage = responseData['message'] ?? 'Đổi mật khẩu thất bại.';
+       }
+
+     } catch (e) {
+       _errorMessage = "Lỗi kết nối hoặc xử lý: ${e.toString()}";
+     }
+
+     _isPasswordSaving = false;
+     notifyListeners();
+     return false;
+   }
+
+   @override
+   void dispose() {
+     super.dispose();
+     fullNameController.dispose();
+     phoneController.dispose();
+     currentPasswordController.dispose();
+     newPasswordController.dispose();
+     confirmPasswordController.dispose();
    }
 
 }

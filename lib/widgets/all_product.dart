@@ -34,28 +34,29 @@ class _AllProductsState extends State<AllProducts> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshProducts();
     });
-    _scrollController.addListener(_onScroll);
+    //_scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+   // _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
-      final provider = Provider.of<ProductProvider>(context, listen: false);
-      if (provider.pageData != null && !provider.pageData!.last && !provider.isLoading) {
-        provider.fetchProducts(page: provider.pageData!.number + 1);
-      }
-    }
+    // if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+    //   final provider = Provider.of<ProductProvider>(context, listen: false);
+    //   if (provider.pageData != null && !provider.pageData!.last && !provider.isLoading) {
+    //     provider.fetchProducts(page: provider.pageData!.number + 1);
+    //   }
+    // }
   }
 
   Future<void> _refreshProducts() async {
-    await Provider.of<ProductProvider>(context, listen: false).fetchProducts(page: 0);
+    await Provider.of<ProductProvider>(context, listen: false).fetchProducts(page: 0, size: 1000);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +113,7 @@ class _AllProductsState extends State<AllProducts> {
                   // Các thuộc tính này rất quan trọng khi GridView nằm trong SingleChildScrollView
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: provider.products.length + (provider.pageData != null && !provider.pageData!.last ? 1 : 0),
+                  itemCount: provider.products.length, // ✅ Không cần cộng thêm loading item
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 12.0,

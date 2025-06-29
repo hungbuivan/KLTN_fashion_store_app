@@ -5,6 +5,8 @@ import 'package:iconsax/iconsax.dart';
 
 // Import các provider và màn hình cần thiết
 import '../providers/auth_provider.dart';
+import '../providers/chat_provider.dart';
+import 'chat_message_screen.dart';
 import 'order_history_screen.dart'; // Để điều hướng đến lịch sử đơn hàng
 import 'edit_profile_screen.dart';  // Màn hình sửa thông tin (sẽ tạo ở bước sau)
 
@@ -62,6 +64,7 @@ class AccountPage extends StatelessWidget {
                       backgroundImage: (displayAvatarUrl.isNotEmpty)
                           ? NetworkImage(displayAvatarUrl)
                           : null,
+                      onBackgroundImageError: (_, __) {}, // ✅ Tránh crash nếu ảnh lỗi
                       child: (displayAvatarUrl.isEmpty)
                           ? Icon(
                         Iconsax.user,
@@ -70,6 +73,7 @@ class AccountPage extends StatelessWidget {
                       )
                           : null,
                     ),
+
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -187,6 +191,29 @@ class AccountPage extends StatelessWidget {
     );
   }
 
+  // ✅ THÊM HÀM MỚI NÀY
+  void _navigateToChat(BuildContext context) async {
+    final chatProvider = context.read<ChatProvider>();
+    // Hiển thị loading
+    showDialog(context: context, barrierDismissible: false, builder: (ctx) => const Center(child: CircularProgressIndicator()));
+
+    // Gọi API để tạo hoặc lấy phòng chat
+    final room = await chatProvider.createOrGetChatRoomForUser();
+
+    Navigator.of(context, rootNavigator: true).pop(); // Đóng dialog loading
+
+    if (room != null && context.mounted) {
+      Navigator.of(context).pushNamed(
+        ChatMessageScreen.routeName,
+        arguments: {'roomId': room.id, 'userName': 'Hỗ trợ khách hàng'},
+      );
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(chatProvider.errorMessage ?? 'Không thể bắt đầu cuộc trò chuyện.')),
+      );
+    }
+  }
+
   // Widget cho phần menu các tùy chọn
   Widget _buildProfileMenu(BuildContext context) {
     return Column(
@@ -229,6 +256,14 @@ class AccountPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Chức năng đang phát triển!')));
           },
         ),
+        _buildMenuTile(
+          context: context,
+          icon: Iconsax.message_question,
+          title: 'Hỗ trợ & CSKH',
+          subtitle: 'Trò chuyện trực tiếp với chúng tôi',
+          onTap: () => _navigateToChat(context), // ✅ GỌI HÀM MỚI
+        ),
+
       ],
     );
   }
