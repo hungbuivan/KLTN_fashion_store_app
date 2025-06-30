@@ -8,7 +8,7 @@ import '../providers/category_provider.dart';
 import '../models/category_node_model.dart';
 
 // Import các widget và màn hình khác
-import '../widgets/all_product.dart';
+import '../widgets///all_product.dart';
 import 'products_by_category_screen.dart';
 
 class CategoryPage extends StatefulWidget {

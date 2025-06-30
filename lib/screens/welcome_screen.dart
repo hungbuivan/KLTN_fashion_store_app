@@ -64,7 +64,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   SizedBox(height: screenSize.height * 0.015),
                   const Text(
-                    "Welcome, where\nyou shopping everything",
+                    "Tận hưởng ứng dụng mua sắm không giới hạn",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,

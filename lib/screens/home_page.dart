@@ -12,7 +12,7 @@ import '../views/home/app_header.dart';
 import '../views/home/search_area.dart';
 import '../widgets/banner_slider.dart';
 import '../widgets/categories_part.dart';
-import '../widgets/all_product.dart';
+import '../widgets///all_product.dart';
 import '../widgets/popular_selection.dart';
 
 class HomePage extends StatefulWidget {

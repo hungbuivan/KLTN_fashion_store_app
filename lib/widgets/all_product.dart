@@ -3,18 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../providers/product_provider.dart';
-import '../providers/product_detail_provider.dart';
-import '../providers/wishlist_provider.dart';
-import '../providers/cart_provider.dart';
-import '../providers/auth_provider.dart';
-import '../models/product_summary_model.dart';
-import '../models/product_detail_model.dart';
+
+import 'package:fashion_store_app/providers/product_detail_provider.dart';
+import 'package:fashion_store_app/providers/product_provider.dart';
+import 'package:fashion_store_app/providers/wishlist_provider.dart';
+import 'package:fashion_store_app/providers/cart_provider.dart';
+import 'package:fashion_store_app/providers/auth_provider.dart';
+import 'package:fashion_store_app/models/product_summary_model.dart';
+import 'package:fashion_store_app/models/product_detail_model.dart';
 // import '../screens/product_detail_screen.dart';
-import '../views/home/product_details_screen.dart';
-import 'add_to_cart_bottom_sheet.dart';
-import '../utils/formatter.dart';
-import 'navigation_menu.dart';
+import 'package:fashion_store_app/views/home/product_details_screen.dart';
+import 'package:fashion_store_app/widgets/add_to_cart_bottom_sheet.dart';
+import 'package:fashion_store_app/utils/formatter.dart';
+import 'package:fashion_store_app/widgets/navigation_menu.dart';
 
 
 class AllProducts extends StatefulWidget {

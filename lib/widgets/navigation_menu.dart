@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Import các provider cần thiết
-import '../providers/cart_provider.dart';
-import '../providers/notification_provider.dart';
+import 'package:fashion_store_app/providers/cart_provider.dart';
+import 'package:fashion_store_app/providers/notification_provider.dart';
 
 // Import các màn hình và widget con
-import '../screens/home_page.dart';
-import '../screens/category_page.dart';
-import '../screens/cart_page.dart';
-import '../screens/wishlist_screen.dart';
-import '../screens/account_page.dart';
-import 'app_bottom_nav_bar.dart';
+import 'package:fashion_store_app/screens/home_page.dart';
+import 'package:fashion_store_app/screens/category_page.dart';
+import 'package:fashion_store_app/screens/cart_page.dart';
+import 'package:fashion_store_app/screens/wishlist_screen.dart';
+import 'package:fashion_store_app/screens/account_page.dart';
+import 'package:fashion_store_app/widgets/app_bottom_nav_bar.dart';
 
 class NavigationMenu extends StatefulWidget {
   final int selectedIndex;

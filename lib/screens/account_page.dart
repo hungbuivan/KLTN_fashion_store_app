@@ -61,18 +61,29 @@ class AccountPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey.shade200,
-                      backgroundImage: (displayAvatarUrl.isNotEmpty)
-                          ? NetworkImage(displayAvatarUrl)
-                          : null,
-                      onBackgroundImageError: (_, __) {}, // ✅ Tránh crash nếu ảnh lỗi
-                      child: (displayAvatarUrl.isEmpty)
-                          ? Icon(
-                        Iconsax.user,
-                        size: 40,
-                        color: Colors.grey.shade500,
-                      )
-                          : null,
+                      child: ClipOval(
+                        child: (displayAvatarUrl.isNotEmpty)
+                            ? Image.network(
+                          displayAvatarUrl,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Iconsax.user,
+                              size: 40,
+                              color: Colors.grey.shade500,
+                            );
+                          },
+                        )
+                            : Icon(
+                          Iconsax.user,
+                          size: 40,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
                     ),
+
 
                     const SizedBox(width: 16),
                     Expanded(
