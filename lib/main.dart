@@ -20,9 +20,9 @@ import 'package:fashion_store_app/providers/stats_provider.dart';
 import 'package:fashion_store_app/providers/user_admin_provider.dart';
 import 'package:fashion_store_app/providers/voucher_admin_provider.dart';
 import 'package:fashion_store_app/providers/wishlist_provider.dart';
+import 'package:fashion_store_app/screens/account_page.dart';
 import 'package:fashion_store_app/screens/add_review_screen.dart';
 import 'package:fashion_store_app/screens/admin/admin_home_page.dart';
-import 'package:fashion_store_app/screens/admin/pages/admin_order_detail_screen.dart';
 import 'package:fashion_store_app/screens/cart_page.dart';
 import 'package:fashion_store_app/screens/chat_message_screen.dart';
 import 'package:fashion_store_app/screens/checkout_screen.dart';
@@ -31,8 +31,10 @@ import 'package:fashion_store_app/screens/notification_screen.dart';
 import 'package:fashion_store_app/screens/onboarding_screen.dart';
 import 'package:fashion_store_app/screens/order_history_screen.dart';
 import 'package:fashion_store_app/screens/order_success_screen.dart';
-import 'package:fashion_store_app/screens/product_screen.dart';
 import 'package:fashion_store_app/screens/products_by_category_screen.dart';
+import 'package:fashion_store_app/screens/test/test.dart';
+import 'package:fashion_store_app/screens/test/test2.dart';
+import 'package:fashion_store_app/screens/test/test3.dart';
 import 'package:fashion_store_app/views/admin/admin_notifications.dart';
 import 'package:fashion_store_app/views/auth/login_screen.dart';
 import 'package:fashion_store_app/views/auth/signup_screen.dart';
@@ -51,7 +53,6 @@ import 'providers/voucher_provider.dart'; // Đảm bảo VoucherProvider đã �
 // Import các màn hình của bạn
 import 'screens/welcome_screen.dart'; // Ví dụ, bạn sẽ cần màn hình này
 import 'package:fashion_store_app/screens/order_detail_screen.dart';
-import 'package:fashion_store_app/screens/order_success_screen.dart';
 
 
 final storage = FlutterSecureStorage();
@@ -194,12 +195,18 @@ class MyApp extends StatelessWidget {
           '/admin_panel': (context) => const AdminHomePage(),
           '/wishlist': (context) => const WishlistScreen(),
           '/checkout': (context) => const CheckoutScreen(),
+          '/account': (context) => const AccountPage(),
+
+          '/test': (context) => const Test(),
+          '/test2': (context) => const Test2(),
+          '/test3': (context) => const Test3(),
           //CheckoutScreen.routeName: (context) => const CheckoutScreen(), // Ví dụ nếu CheckoutScreen có routeName
           // '/cart': (context) => const CartPage(), // Nếu bạn đã có CartPage
           OrderHistoryScreen.routeName: (context) => const OrderHistoryScreen(), // Đăng ký route tĩnh
           EditProfileScreen.routeName: (context) => const EditProfileScreen(),
           NotificationScreen.routeName: (context) => const NotificationScreen(),
           AdminNotificationsScreen.routeName: (context) => const AdminNotificationsScreen(),
+
 
         },
         onGenerateRoute: (settings) {

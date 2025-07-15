@@ -1,11 +1,9 @@
 // file: lib/screens/admin/pages/chat_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:timeago/timeago.dart' as timeago; // ✅ Import package timeago
 
 import '../../../providers/chat_provider.dart';
-import '../../../models/chat_room_model.dart';
 import '../../chat_message_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -76,15 +74,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                   title: Text(room.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    room.lastMessage ?? 'Bắt đầu cuộc trò chuyện...',
+                    room.lastMessage != null
+                        ? (room.lastMessageSenderType == 'ADMIN'
+                        ? 'Bạn: ${room.lastMessage}'
+                        : room.lastMessage!)
+                        : 'Bắt đầu cuộc trò chuyện...',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    // ✅ Hiển thị chữ đậm nếu có tin nhắn chưa đọc
-                    style: TextStyle(
-                      fontWeight: room.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
-                      color: room.unreadCount > 0 ? Colors.black : Colors.grey,
-                    ),
                   ),
+
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,

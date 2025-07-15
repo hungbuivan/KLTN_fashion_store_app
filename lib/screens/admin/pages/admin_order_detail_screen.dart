@@ -8,11 +8,12 @@ import 'package:intl/intl.dart';
 import '../../../providers/order_provider.dart';
 import '../../../models/order_detail_model.dart';
 import '../../../models/order_item_model.dart';
+import 'invoice_screen.dart';
 // import '../../../screens/product_detail_screen.dart'; // Để điều hướng khi nhấn vào sản phẩm
 
 // Các hàm helper cục bộ hoặc từ file utils
 final currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDigits: 0, name: '');
-String _formatCurrency(double? value) { if (value == null) return "N/A"; return currencyFormatter.format(value) + " VNĐ"; }
+String _formatCurrency(double? value) { if (value == null) return "N/A"; return "${currencyFormatter.format(value)} VNĐ"; }
 String _fixImageUrl(String? url) { const String serverBase = "http://10.0.2.2:8080"; if (url == null || url.isEmpty) return 'https://via.placeholder.com/150'; if (url.startsWith('http')) { if (url.contains('://localhost:8080')) return url.replaceFirst('://localhost:8080', serverBase); return url; } if (url.startsWith('/')) return serverBase + url; return '$serverBase/images/products/$url';}
 
 
@@ -95,9 +96,28 @@ class _AdminOrderDetailScreenState extends State<AdminOrderDetailScreen> {
       appBar: AppBar(
         title: Text('Chi tiết Đơn hàng #${widget.orderId.toString().padLeft(6, '0')}'),
         elevation: 1,
-
+        actions: [
+          Consumer<OrderProvider>(
+            builder: (context, orderProvider, _) {
+              final order = orderProvider.currentOrderDetail;
+              if (order != null) {
+                return IconButton(
+                  icon: const Icon(Iconsax.printer),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => InvoiceScreen(order: order),
+                      ),
+                    );
+                  },
+                  tooltip: 'In hóa đơn',
+                );
+              }
+              return const SizedBox.shrink(); // Không hiển thị gì nếu order null
+            },
+          ),
+        ],
         backgroundColor: Colors.blue,
-
       ),
       body: FutureBuilder(
         future: _fetchOrderDetailFuture,

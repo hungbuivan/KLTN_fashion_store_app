@@ -45,7 +45,7 @@ class ProductDetailModel {
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
-    List<String> _parseStringList(dynamic listJson) {
+    List<String> parseStringList(dynamic listJson) {
       if (listJson is List) {
         return List<String>.from(listJson.map((item) => item.toString()));
       }
@@ -63,12 +63,12 @@ class ProductDetailModel {
       categoryName: json['categoryName'] as String?,
       brandId: json['brandId'] as int?,
       brandName: json['brandName'] as String?,
-      imageUrls: _parseStringList(json['imageUrls']),
+      imageUrls: parseStringList(json['imageUrls']),
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalReviews: json['totalReviews'] as int?,
-      availableColors: _parseStringList(json['availableColors']),
+      availableColors: parseStringList(json['availableColors']),
       // ✅ Sửa ở đây
-      availableSizes: _parseStringList(json['availableSizes']),
+      availableSizes: parseStringList(json['availableSizes']),
       // ✅ Và ở đây
       isPopular: json['isPopular'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(

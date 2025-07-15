@@ -7,7 +7,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 // Import các provider, model và tiện ích cần thiết
 import '../models/order_item_model.dart';
 import '../providers/product_review_provider.dart';
-import '../models/order_detail_model.dart'; // Để dùng OrderItemModel
+// Để dùng OrderItemModel
 import '../utils/formatter.dart';
 
 class AddReviewScreen extends StatefulWidget {

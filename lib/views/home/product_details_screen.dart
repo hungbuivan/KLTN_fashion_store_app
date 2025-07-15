@@ -1,6 +1,5 @@
 // file: lib/screens/product_detail_screen.dart
 import 'package:carousel_slider/carousel_slider.dart' as cs;
-import 'package:carousel_slider/carousel_controller.dart' as cs;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -95,8 +94,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     const String serverBase = "http://10.0.2.2:8080";
     if (url == null || url.isEmpty) return 'https://via.placeholder.com/600';
     if (url.startsWith('http')) {
-      if (url.contains('://localhost:8080'))
+      if (url.contains('://localhost:8080')) {
         return url.replaceFirst('://localhost:8080', serverBase);
+      }
       return url;
     }
     if (url.startsWith('/')) return serverBase + url;
@@ -363,7 +363,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title,
-      {String? selectedValue, String? trailingText, VoidCallback? onTrailingTap}) {
+      {String? trailingText, VoidCallback? onTrailingTap}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

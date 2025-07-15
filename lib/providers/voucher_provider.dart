@@ -133,7 +133,7 @@ class VoucherProvider with ChangeNotifier {
 
       final Map<String, dynamic> responseData = jsonDecode(utf8.decode(response.bodyBytes));
       print("VoucherProvider: Check voucher response status: ${response.statusCode}");
-      print("VoucherProvider: Check voucher response body: ${responseData}");
+      print("VoucherProvider: Check voucher response body: $responseData");
 
       _checkedVoucherInfo = VoucherCheckResponse.fromJson(responseData);
 
@@ -199,8 +199,4 @@ class VoucherProvider with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }

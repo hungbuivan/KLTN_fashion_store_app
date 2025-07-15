@@ -10,7 +10,6 @@ import 'package:fashion_store_app/providers/wishlist_provider.dart';
 import 'package:fashion_store_app/providers/cart_provider.dart';
 import 'package:fashion_store_app/providers/auth_provider.dart';
 import 'package:fashion_store_app/models/product_summary_model.dart';
-import 'package:fashion_store_app/models/product_detail_model.dart';
 // import '../screens/product_detail_screen.dart';
 import 'package:fashion_store_app/views/home/product_details_screen.dart';
 import 'package:fashion_store_app/widgets/add_to_cart_bottom_sheet.dart';

@@ -173,8 +173,12 @@ class ChatProvider with ChangeNotifier {
       final response = await http.get(Uri.parse('$_restApiUrl/rooms'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+        print('DEBUG: Chat rooms JSON data: $data'); // 🔍 Log ở đây
+        print("DEBUG: Chat rooms JSON data: ${response.body}");
+
         _chatRooms = data.map((json) => ChatRoomModel.fromJson(json)).toList();
-      } else {
+      }
+      else {
         _errorMessage = "Lỗi tải danh sách chat.";
       }
     } catch(e) {

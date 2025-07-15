@@ -24,7 +24,6 @@ import '../models/cart_model.dart';
 // Import các widget và màn hình con
 import '../widgets/applicable_voucher_item.dart';
 import 'order_success_screen.dart';
-import 'order_history_screen.dart';
 
 // Import các tiện ích
 import 'package:fashion_store_app/utils/formatter.dart';
@@ -98,7 +97,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  // ✅ HÀM MỚI: Dán hàm này vào trong _CheckoutScreenState
   void _showApplicableVouchersBottomSheet(BuildContext context, VoucherProvider voucherProvider, double subtotal) {
     // Tải lại danh sách voucher khả dụng mỗi khi mở bottom sheet (để cập nhật)
     voucherProvider.fetchApplicableVouchers(subtotal);
@@ -110,83 +108,112 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext bottomSheetContext) {
-        // Sử dụng Consumer để rebuild khi VoucherProvider thay đổi
         return Consumer<VoucherProvider>(
-          builder: (ctx, vp, _) { // vp là VoucherProvider instance
-            Widget content;
-            if (vp.isLoadingApplicableVouchers) {
-              content = const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator()));
-            } else if (vp.errorMessage != null && vp.applicableVouchers.isEmpty) {
-              content = Center(child: Padding(padding: const EdgeInsets.all(32.0), child: Text("Lỗi tải mã: ${vp.errorMessage}")));
-            } else if (vp.applicableVouchers.isEmpty) {
-              content = const Center(child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Text("Không có mã giảm giá nào phù hợp cho đơn hàng này.", textAlign: TextAlign.center),
-              ));
-            } else {
-              content = ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                itemCount: vp.applicableVouchers.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final voucher = vp.applicableVouchers[index];
-                  return ApplicableVoucherItem( // Sử dụng widget bạn đã tạo
-                    voucher: voucher,
-                    isCurrentlyApplied: voucher.code == vp.appliedVoucherCode,
-                    onTap: () async {
-                      Navigator.pop(bottomSheetContext); // Đóng bottom sheet
-                      _voucherCodeController.text = voucher.code; // Điền mã vào ô input
-                      // Tự động gọi hàm áp dụng voucher
-                      final success = await context.read<VoucherProvider>().checkAndApplyVoucher(voucher.code, subtotal);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(context.read<VoucherProvider>().errorMessage ?? (success ? 'Đã áp dụng mã: ${voucher.code}' : 'Không thể áp dụng mã này.')),
-                            backgroundColor: success ? Colors.green : Colors.red,
-                          ),
-                        );
-                        if (success && context.read<VoucherProvider>().checkedVoucherInfo != null) {
-                          _voucherCodeController.text = context.read<VoucherProvider>().checkedVoucherInfo!.voucherCode ?? '';
-                        }
-                      }
-                    },
-                  );
-                },
-              );
-            }
-
-            // Cho phép cuộn và thay đổi kích thước bottom sheet
+          builder: (ctx, vp, _) {
             return DraggableScrollableSheet(
-                initialChildSize: 0.6, // Chiều cao ban đầu
-                minChildSize: 0.3,    // Chiều cao tối thiểu
-                maxChildSize: 0.9,    // Chiều cao tối đa
-                expand: false,
-                builder: (_, scrollController) {
-                  return Container(
-                    padding: const EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0, bottom: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Thanh kéo nhỏ ở trên cùng
-                        Center(
-                          child: Container(
-                            width: 40, height: 5,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                        Text("Chọn mã giảm giá", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 10),
-                        Expanded(child: SingleChildScrollView(controller: scrollController, child: content)),
-                      ],
+              initialChildSize: 0.6,
+              minChildSize: 0.3,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, scrollController) {
+                Widget content;
+                if (vp.isLoadingApplicableVouchers) {
+                  content = const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: CircularProgressIndicator(),
                     ),
                   );
-                });
+                } else if (vp.errorMessage != null && vp.applicableVouchers.isEmpty) {
+                  content = Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Text("Lỗi tải mã: ${vp.errorMessage}"),
+                    ),
+                  );
+                } else if (vp.applicableVouchers.isEmpty) {
+                  content = const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text(
+                        "Không có mã giảm giá nào phù hợp cho đơn hàng này.",
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                } else {
+                  content = ListView.builder(
+                    controller: scrollController, // ✅ Gắn scrollController ở đây
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    itemCount: vp.applicableVouchers.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final voucher = vp.applicableVouchers[index];
+                      return ApplicableVoucherItem(
+                        voucher: voucher,
+                        isCurrentlyApplied: voucher.code == vp.appliedVoucherCode,
+                        onTap: () async {
+                          Navigator.pop(bottomSheetContext); // Đóng bottom sheet
+                          _voucherCodeController.text = voucher.code;
+                          final success = await context.read<VoucherProvider>().checkAndApplyVoucher(voucher.code, subtotal);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  context.read<VoucherProvider>().errorMessage ??
+                                      (success ? 'Đã áp dụng mã: ${voucher.code}' : 'Không thể áp dụng mã này.'),
+                                ),
+                                backgroundColor: success ? Colors.green : Colors.red,
+                              ),
+                            );
+                            if (success && context.read<VoucherProvider>().checkedVoucherInfo != null) {
+                              _voucherCodeController.text =
+                                  context.read<VoucherProvider>().checkedVoucherInfo!.voucherCode ?? '';
+                            }
+                          }
+                        },
+                      );
+                    },
+                  );
+                }
+
+                return Container(
+                  padding: const EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0, bottom: 16.0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 5,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        "Chọn mã giảm giá",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 10),
+                      // ✅ Không cần wrap thêm SingleChildScrollView nữa, chỉ cần Expanded(content)
+                      Expanded(child: content),
+                    ],
+                  ),
+                );
+              },
+            );
           },
         );
       },
     );
   }
+
 
   String fixImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -207,7 +234,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Khởi tạo địa chỉ mặc định từ thông tin user đã đăng nhập
     if (auth.user != null) {
-      List<String> addressParts = auth.user!.address?.split(',').map((e) => e.trim()).toList() ?? [];
+      List<String> addressParts = auth.user!.address.split(',').map((e) => e.trim()).toList() ?? [];
       setState(() {
         _currentShippingAddress = ShippingAddressModel(
           fullNameReceiver: auth.user!.fullName ?? '',
@@ -290,13 +317,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return CartItemInfoData(
         productId: item.productId,
         quantity: item.quantity,
+        size: item.size,
+        color: item.color,
       );
     }).toList();
+
 
     final shippingFee = 30000.0;
 
     // ✅ Xử lý thanh toán qua VietQR
     if (_selectedPaymentMethod == 'VIETQR') {
+      print("📦 Dữ liệu gửi đơn hàng (VietQR):");
+      print({
+        "cartItems": cartItemsData.map((e) => e.toJson()).toList(),
+        "shippingAddress": _currentShippingAddress!.toJson(),
+        "paymentMethod": _selectedPaymentMethod,
+        "shippingFee": shippingFee,
+        "voucherCode": voucherProvider.appliedVoucherCode,
+        "initialStatus": "AWAITING_PAYMENT",
+      });
+
+
       final tempOrder = await orderProvider.createOrder(
         cartItems: cartItemsData,
         shippingAddress: _currentShippingAddress!,
@@ -337,7 +378,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     } else {
       // ✅ Xử lý thanh toán COD
+      print("📦 Dữ liệu gửi đơn hàng (COD):");
+      print({
+        "cartItems": cartItemsData.map((e) => e.toJson()).toList(),
+        "shippingAddress": _currentShippingAddress!.toJson(),
+        "paymentMethod": _selectedPaymentMethod,
+        "shippingFee": shippingFee,
+        "voucherCode": voucherProvider.appliedVoucherCode,
+        "initialStatus": "PENDING",
+      });
+
       final createdOrderDetail = await orderProvider.createOrder(
+
+
         cartItems: cartItemsData,
         shippingAddress: _currentShippingAddress!,
         paymentMethod: _selectedPaymentMethod,
@@ -466,7 +519,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final orderProvider = context.watch<OrderProvider>(); // Watch OrderProvider cho isLoading của nút đặt hàng
 
     final cart = cartProvider.cart;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     // Hiển thị loading nếu đang tải giỏ hàng lần đầu
     if (cart == null && cartProvider.isLoading) {
       return Scaffold(appBar: AppBar(title: const Text('Thanh toán')), body: const Center(child: CircularProgressIndicator()));
@@ -495,7 +548,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -866,7 +919,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 context.read<BottomNavProvider>().changeTab(0);
 
                 // Xoá hết các màn hình trước đó và quay về NavigationMenu
-                Navigator.of(context).pushNamedAndRemoveUntil('/navigation', (route) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
               },
 
 

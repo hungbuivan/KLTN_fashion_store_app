@@ -155,10 +155,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   // ✅ HÀM MỚI ĐƯỢC THÊM VÀO
-  /**
-   * Tải lại thông tin người dùng từ server và cập nhật state.
-   * Rất hữu ích sau khi người dùng đã cập nhật thông tin cá nhân của họ.
-   */
+  /// Tải lại thông tin người dùng từ server và cập nhật state.
+  /// Rất hữu ích sau khi người dùng đã cập nhật thông tin cá nhân của họ.
   Future<bool> fetchAndSetUser() async {
     if (user == null) {
       print("AuthProvider: Không có user để làm mới thông tin.");
@@ -174,6 +172,7 @@ class AuthProvider with ChangeNotifier {
       // TODO: Thêm header xác thực (token) nếu API yêu cầu
       // final response = await http.get(url, headers: {'Authorization': 'Bearer $_token'});
       final response = await http.get(url);
+      print("🔥 RESPONSE BODY khi fetch user: ${response.body}");
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(utf8.decode(response.bodyBytes));

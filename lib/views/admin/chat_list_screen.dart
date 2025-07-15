@@ -1,11 +1,9 @@
 // file: lib/views/admin/chat_list_screen.dart (hoặc admin_messages.dart)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/chat_provider.dart';
-import '../../models/chat_room_model.dart';
 import '../../screens/chat_message_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -59,6 +57,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
             itemCount: provider.chatRooms.length,
             itemBuilder: (ctx, index) {
               final room = provider.chatRooms[index];
+              print('User name: ${room.userName}');
+              print('Avatar URL: ${room.userAvatarUrl}');
+
               final avatarUrl = _fixAvatarUrl(room.userAvatarUrl);
               final hasAvatar = avatarUrl.isNotEmpty;
 
@@ -75,10 +76,15 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
                 title: Text(room.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(
-                  room.lastMessage ?? 'Bắt đầu cuộc trò chuyện...',
+                  room.lastMessage != null
+                      ? (room.lastMessageSenderType == 'ADMIN'
+                      ? 'Bạn: ${room.lastMessage}'
+                      : room.lastMessage!)
+                      : 'Bắt đầu cuộc trò chuyện...',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+
                 trailing: room.lastMessageTimestamp != null
                     ? Text(
                   DateFormat('HH:mm').format(room.lastMessageTimestamp!),

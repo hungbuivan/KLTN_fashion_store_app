@@ -1,10 +1,8 @@
-// file: lib/screens/all_reviews_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 
-// Import các provider và model cần thiết
 import '../providers/product_review_provider.dart';
 import '../models/review_model.dart';
 
@@ -34,11 +32,9 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
   @override
   void initState() {
     super.initState();
-    // Tải dữ liệu lần đầu tiên
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshReviews();
     });
-    // Thêm listener để xử lý "tải thêm" khi cuộn
     _scrollController.addListener(_onScroll);
   }
 
@@ -50,10 +46,8 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
   }
 
   void _onScroll() {
-    // Tải thêm trang mới khi người dùng cuộn gần đến cuối
+    final provider = Provider.of<ProductReviewProvider>(context, listen: false);
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
-      final provider = Provider.of<ProductReviewProvider>(context, listen: false);
-      // Chỉ tải thêm nếu không phải là trang cuối và không đang trong quá trình tải
       if (provider.pageData != null && !provider.pageData!.last && !provider.isLoading) {
         provider.fetchReviews(widget.productId, page: provider.pageData!.number + 1);
       }
@@ -61,8 +55,8 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
   }
 
   Future<void> _refreshReviews() async {
-    // Tải lại từ trang đầu tiên
-    await Provider.of<ProductReviewProvider>(context, listen: false).fetchReviews(widget.productId, page: 0);
+    await Provider.of<ProductReviewProvider>(context, listen: false)
+        .fetchReviews(widget.productId, page: 0);
   }
 
   String _fixAvatarUrl(String? url) {
@@ -83,6 +77,9 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
       ),
       body: Consumer<ProductReviewProvider>(
         builder: (context, provider, child) {
+          final double rating = provider.averageRating ?? widget.initialAverageRating;
+          final int total = provider.totalReviews ?? widget.initialTotalReviews;
+
           if (provider.isLoading && provider.reviews.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -96,12 +93,12 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
             child: CustomScrollView(
               controller: _scrollController,
               slivers: [
-                // Phần tóm tắt đánh giá
+                // Tóm tắt rating
                 SliverToBoxAdapter(
-                  child: _buildOverallRatingSummary(context),
+                  child: _buildOverallRatingSummary(context, rating, total),
                 ),
 
-                // Danh sách các đánh giá
+                // Danh sách đánh giá
                 if (provider.reviews.isEmpty)
                   const SliverFillRemaining(
                     child: Center(child: Text('Chưa có đánh giá nào.')),
@@ -117,14 +114,14 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
                     ),
                   ),
 
-                // Hiển thị loading "tải thêm" ở cuối
+                // Loading khi tải thêm
                 if (provider.isLoading && provider.reviews.isNotEmpty)
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
                       child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     ),
-                  )
+                  ),
               ],
             ),
           );
@@ -133,8 +130,7 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
     );
   }
 
-  // Widget hiển thị tóm tắt rating
-  Widget _buildOverallRatingSummary(BuildContext context) {
+  Widget _buildOverallRatingSummary(BuildContext context, double averageRating, int totalReviews) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -148,8 +144,11 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: widget.initialAverageRating.toStringAsFixed(1),
-                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
+                        text: averageRating.toStringAsFixed(1),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const TextSpan(
                         text: ' / 5',
@@ -158,20 +157,18 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
                     ],
                   ),
                 ),
-                _buildStarRating(widget.initialAverageRating, size: 24),
+                _buildStarRating(averageRating, size: 24),
                 const SizedBox(height: 4),
-                Text('${widget.initialTotalReviews} đánh giá', style: const TextStyle(color: Colors.grey)),
+                Text('$totalReviews đánh giá', style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
           const SizedBox(width: 16),
-          // Có thể thêm phần thống kê chi tiết số sao ở đây (5 sao, 4 sao,...)
         ],
       ),
     );
   }
 
-  // Widget hiển thị mỗi card đánh giá
   Widget _buildReviewCard(ReviewModel review, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -185,11 +182,15 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
                 backgroundImage: NetworkImage(_fixAvatarUrl(review.userAvatarUrl)),
                 onBackgroundImageError: (_, __) {},
                 child: (review.userAvatarUrl == null || review.userAvatarUrl!.isEmpty)
-                    ? const Icon(Iconsax.user, color: Colors.grey) : null,
+                    ? const Icon(Iconsax.user, color: Colors.grey)
+                    : null,
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(review.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
-              Text(DateFormat('dd/MM/yyyy').format(review.createdAt), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Expanded(
+                  child: Text(review.userName,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+              Text(DateFormat('dd/MM/yyyy').format(review.createdAt),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 8),
@@ -198,7 +199,8 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
           ]),
           const SizedBox(height: 8),
           if (review.comment != null && review.comment!.isNotEmpty)
-            Text(review.comment!, style: TextStyle(color: Colors.grey[850], height: 1.5)),
+            Text(review.comment!,
+                style: TextStyle(color: Colors.grey[850], height: 1.5)),
         ],
       ),
     );
@@ -211,7 +213,7 @@ class _AllReviewsScreenState extends State<AllReviewsScreen> {
       if (i <= rating) {
         icon = Iconsax.star1;
       } else if (i - 0.5 <= rating) {
-        icon = Iconsax.star_1; // Flutter's Iconsax might not have half-star, using full star as fallback
+        icon = Iconsax.star_1;
       } else {
         icon = Iconsax.star;
       }

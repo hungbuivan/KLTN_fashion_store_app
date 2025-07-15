@@ -9,9 +9,8 @@ import '../../providers/product_detail_provider.dart';
 import '../../providers/wishlist_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/bottom_nav_provider.dart'; // Để chuyển tab
+// Để chuyển tab
 import '../../models/product_summary_model.dart';
-import '../../models/product_detail_model.dart';
 import '../../utils/formatter.dart';
 import '../views/home/product_details_screen.dart';
 import 'add_to_cart_bottom_sheet.dart';

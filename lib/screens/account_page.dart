@@ -44,6 +44,9 @@ class AccountPage extends StatelessWidget {
         // Nếu đã đăng nhập, hiển thị thông tin tài khoản
         final user = authProvider.user!;
         final displayAvatarUrl = _fixImageUrl(user.avt_url);
+        print('🧩 user.avt_url gốc: ${user.avt_url}');
+        print('🖼️ displayAvatarUrl sau fix: $displayAvatarUrl');
+
 
         return Scaffold(
           appBar: AppBar(
@@ -274,6 +277,34 @@ class AccountPage extends StatelessWidget {
           subtitle: 'Trò chuyện trực tiếp với chúng tôi',
           onTap: () => _navigateToChat(context), // ✅ GỌI HÀM MỚI
         ),
+
+        // _buildMenuTile(
+        //   context: context,
+        //   icon: Iconsax.message_question,
+        //   title: 'Test',
+        //   subtitle: 'Test',
+        //   onTap: () {
+        //     Navigator.of(context).pushNamed('/test');
+        //   }// ✅ GỌI HÀM MỚI
+        // ),
+        // _buildMenuTile(
+        //   context: context,
+        //   icon: Iconsax.message_question,
+        //   title: 'Test2',
+        //   subtitle: 'Test',
+        //   onTap: () {
+        //     Navigator.of(context).pushNamed('/test2');
+        //   }// ✅ GỌI HÀM MỚI
+        // ),
+        // _buildMenuTile(
+        //   context: context,
+        //   icon: Iconsax.message_question,
+        //   title: 'Test3',
+        //   subtitle: 'Test',
+        //   onTap: () {
+        //     Navigator.of(context).pushNamed('/test3');
+        //   }// ✅ GỌI HÀM MỚI
+        // ),
 
       ],
     );

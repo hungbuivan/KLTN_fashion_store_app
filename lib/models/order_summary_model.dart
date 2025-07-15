@@ -35,21 +35,21 @@ class OrderSummaryModel {
 
   factory OrderSummaryModel.fromJson(Map<String, dynamic> json) {
     // Helper an toàn để parse
-    int? _parseInt(dynamic value) {
+    int? parseInt(dynamic value) {
       if (value == null) return null;
       if (value is int) return value;
       if (value is String) return int.tryParse(value);
       if (value is double) return value.toInt();
       return null;
     }
-    double? _parseDouble(dynamic value) {
+    double? parseDouble(dynamic value) {
       if (value == null) return null;
       if (value is double) return value;
       if (value is int) return value.toDouble();
       if (value is String) return double.tryParse(value);
       return null;
     }
-    DateTime? _parseDateTime(String? dateString) {
+    DateTime? parseDateTime(String? dateString) {
       if (dateString == null || dateString.isEmpty) return null;
       try {
         return DateTime.parse(dateString);
@@ -61,22 +61,22 @@ class OrderSummaryModel {
 
     // Backend có thể trả về 'orderDate' (là createdAt của Order) hoặc chỉ 'createdAt'
     // Ưu tiên 'orderDate' nếu có, nếu không dùng 'createdAt'
-    DateTime? effectiveOrderDate = _parseDateTime(json['orderDate'] as String?);
-    effectiveOrderDate ??= _parseDateTime(json['createdAt'] as String?);
+    DateTime? effectiveOrderDate = parseDateTime(json['orderDate'] as String?);
+    effectiveOrderDate ??= parseDateTime(json['createdAt'] as String?);
 
 
     return OrderSummaryModel(
-      orderId: _parseInt(json['orderId']) ?? 0, // Cần ID, nếu null thì là lỗi dữ liệu
+      orderId: parseInt(json['orderId']) ?? 0, // Cần ID, nếu null thì là lỗi dữ liệu
       orderDate: effectiveOrderDate,
       firstProductImageUrl: json['firstProductImageUrl'] as String?,
       firstProductNameOrItemCount: json['firstProductNameOrItemCount'] as String? ?? 'Chi tiết đơn hàng',
-      totalQuantityOfItems: _parseInt(json['totalQuantityOfItems']) ?? 0,
-      totalAmount: _parseDouble(json['totalAmount']),
+      totalQuantityOfItems: parseInt(json['totalQuantityOfItems']) ?? 0,
+      totalAmount: parseDouble(json['totalAmount']),
       status: json['status'] as String? ?? 'UNKNOWN',
       customerName: json['customerName'] as String?,
       customerEmail: json['customerEmail'] as String?,
       appliedVoucherCode: json['appliedVoucherCode'] as String?,
-      voucherDiscountAmount: _parseDouble(json['voucherDiscountAmount']),
+      voucherDiscountAmount: parseDouble(json['voucherDiscountAmount']),
       firstProductSize: json['firstProductSize'] as String?,
       firstProductColor: json['firstProductColor'] as String?,
     );

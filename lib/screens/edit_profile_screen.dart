@@ -72,8 +72,25 @@ class _EditProfileViewState extends State<EditProfileView> {
     _formKey.currentState!.save();
 
     final provider = context.read<EditProfileProvider>();
-    final success = await provider.updateUserProfile();
 
+    // 1. Gọi cập nhật thông tin cá nhân
+    final profileSuccess = await provider.updateUserProfile();
+
+    // 2. Nếu có nhập mật khẩu thì đổi mật khẩu
+    bool passwordSuccess = true;
+    if (provider.currentPasswordController.text.isNotEmpty ||
+        provider.newPasswordController.text.isNotEmpty ||
+        provider.confirmPasswordController.text.isNotEmpty) {
+      passwordSuccess = await provider.changePassword();
+    }
+
+    // ✅ 3. Nếu thành công thì gọi lại AuthProvider để lấy user mới
+    final success = profileSuccess && passwordSuccess;
+    if (success) {
+      await context.read<AuthProvider>().fetchAndSetUser();
+    }
+
+    // 4. Hiển thị kết quả
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -81,6 +98,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
+
       if (success) {
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) Navigator.of(context).pop();
@@ -88,6 +106,8 @@ class _EditProfileViewState extends State<EditProfileView> {
       }
     }
   }
+
+
 
   // ✅ HÀM MỚI ĐỂ XỬ LÝ VIỆC ĐỔI MẬT KHẨU
   Future<void> _changePassword() async {

@@ -58,8 +58,8 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   stomp_dart_client: ^1.0.3
   timeago: ^3.7.1
-
-
+  pdf: ^3.10.6
+  printing: ^5.11.0
 
 
 dev_dependencies:
@@ -107,6 +107,12 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 800
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 300
+        - asset: assets/fonts/Roboto-Regular.ttf
+          weight: 300
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -26,6 +26,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
     });
   }
 
+  Future<void> _refreshNotifications() async {
+    await Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã làm mới thông báo')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,19 +44,35 @@ class _NotificationScreenState extends State<NotificationScreen> {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+
           if (provider.errorMessage != null) {
             return Center(child: Text(provider.errorMessage!));
           }
+
           if (provider.notifications.isEmpty) {
-            return const Center(child: Text('Bạn chưa có thông báo nào.'));
+            return RefreshIndicator(
+              onRefresh: _refreshNotifications,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 200),
+                  Center(child: Text('Bạn chưa có thông báo nào.')),
+                ],
+              ),
+            );
           }
-          return ListView.separated(
-            itemCount: provider.notifications.length,
-            itemBuilder: (context, index) {
-              final notification = provider.notifications[index];
-              return _NotificationCard(notification: notification);
-            },
-            separatorBuilder: (context, index) => const Divider(height: 1),
+
+          return RefreshIndicator(
+            onRefresh: _refreshNotifications,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: provider.notifications.length,
+              itemBuilder: (context, index) {
+                final notification = provider.notifications[index];
+                return _NotificationCard(notification: notification);
+              },
+              separatorBuilder: (context, index) => const Divider(height: 1),
+            ),
           );
         },
       ),
@@ -72,7 +95,10 @@ class _NotificationCard extends StatelessWidget {
           notification.orderId != null ? Iconsax.box_tick : Iconsax.notification_1,
           color: Theme.of(context).primaryColor,
         ),
-        title: Text(notification.title, style: TextStyle(fontWeight: isUnread ? FontWeight.bold : FontWeight.normal)),
+        title: Text(
+          notification.title,
+          style: TextStyle(fontWeight: isUnread ? FontWeight.bold : FontWeight.normal),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

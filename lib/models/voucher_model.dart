@@ -50,7 +50,7 @@ class VoucherModel {
     }
 
     // Hàm helper để parse số một cách an toàn
-    int? _parseInt(dynamic value) {
+    int? parseInt(dynamic value) {
       if (value == null) return null;
       if (value is int) return value;
       if (value is double) return value.toInt();
@@ -58,7 +58,7 @@ class VoucherModel {
       return null;
     }
 
-    double? _parseDouble(dynamic value) {
+    double? parseDouble(dynamic value) {
       if (value == null) return null;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -68,20 +68,20 @@ class VoucherModel {
 
 
     return VoucherModel(
-      id: _parseInt(json['id']), // Backend trả về id là Integer
+      id: parseInt(json['id']), // Backend trả về id là Integer
       code: json['code'] as String? ?? 'NOCODE', // Cần code để hoạt động
       description: json['description'] as String?,
       discountType: parseDiscountType(json['discountType'] as String?),
-      discountValue: _parseDouble(json['discountValue']) ?? 0.0, // Giá trị giảm giá
-      minOrderValue: _parseDouble(json['minOrderValue']),
-      maxDiscountAmount: _parseDouble(json['maxDiscountAmount']),
+      discountValue: parseDouble(json['discountValue']) ?? 0.0, // Giá trị giảm giá
+      minOrderValue: parseDouble(json['minOrderValue']),
+      maxDiscountAmount: parseDouble(json['maxDiscountAmount']),
       startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate']) : null,
       // Backend có thể trả về 'active' hoặc 'isActive'. Ưu tiên 'active', fallback về 'isActive'
       isActive: json['active'] as bool? ?? json['isActive'] as bool? ?? false,
-       usageLimitPerVoucher: _parseInt(json['usageLimitPerVoucher']),
-       usageLimitPerUser: _parseInt(json['usageLimitPerUser']),
-       currentUsageCount: _parseInt(json['currentUsageCount']) ?? 0,
+       usageLimitPerVoucher: parseInt(json['usageLimitPerVoucher']),
+       usageLimitPerUser: parseInt(json['usageLimitPerUser']),
+       currentUsageCount: parseInt(json['currentUsageCount']) ?? 0,
     );
   }
 

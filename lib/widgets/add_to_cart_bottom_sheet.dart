@@ -2,7 +2,6 @@
 import 'package:fashion_store_app/utils/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
 import '../models/product_detail_model.dart';
 
 // Các hàm helper (bạn có thể đưa vào file utils chung)

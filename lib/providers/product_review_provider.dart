@@ -1,4 +1,3 @@
-// file: lib/providers/product_review_provider.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,12 +25,20 @@ class ProductReviewProvider with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  double? _averageRating;
+  int? _totalReviews;
+
+  double? get averageRating => _averageRating;
+  int? get totalReviews => _totalReviews;
+
   // Hàm lấy danh sách đánh giá cho một sản phẩm
   Future<void> fetchReviews(int productId, {int page = 0, int size = 5}) async {
     _isLoading = true;
     if (page == 0) {
-      _reviews = []; // Xóa dữ liệu cũ khi tải lại từ đầu
+      _reviews = [];
       _errorMessage = null;
+      _averageRating = null;
+      _totalReviews = null;
     }
     notifyListeners();
 
@@ -47,6 +54,18 @@ class ProductReviewProvider with ChangeNotifier {
           _reviews = _pageData!.content;
         } else {
           _reviews.addAll(_pageData!.content);
+        }
+
+        // ✅ Tính lại trung bình và tổng số đánh giá
+        if (_reviews.isNotEmpty) {
+          final total = _reviews.length;
+          final avg = _reviews.map((e) => e.rating).reduce((a, b) => a + b) / total;
+
+          _averageRating = double.parse(avg.toStringAsFixed(1)); // Làm tròn 1 chữ số thập phân
+          _totalReviews = total;
+        } else {
+          _averageRating = 0.0;
+          _totalReviews = 0;
         }
       } else {
         _errorMessage = 'Lỗi tải đánh giá: ${response.statusCode}';
@@ -92,7 +111,6 @@ class ProductReviewProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 201) {
-        // Tạo đánh giá thành công, tải lại danh sách review cho sản phẩm đó
         await fetchReviews(productId);
         success = true;
       } else {

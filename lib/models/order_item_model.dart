@@ -21,15 +21,17 @@ class OrderItemModel {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    print("🧩 OrderItem JSON: $json"); // 👈 Dòng này để log JSON item
+
     // Helper an toàn để parse int và double
-    int? _parseInt(dynamic value) {
+    int? parseInt(dynamic value) {
       if (value == null) return null;
       if (value is int) return value;
       if (value is String) return int.tryParse(value);
       if (value is double) return value.toInt(); // Chấp nhận double từ JSON cho int
       return null;
     }
-    double? _parseDouble(dynamic value) {
+    double? parseDouble(dynamic value) {
       if (value == null) return null;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -38,12 +40,12 @@ class OrderItemModel {
     }
 
     return OrderItemModel(
-      productId: _parseInt(json['productId']),
+      productId: parseInt(json['productId']),
       productName: json['productName'] as String? ?? 'Sản phẩm không xác định',
       productImageUrl: json['productImageUrl'] as String?,
-      quantity: _parseInt(json['quantity']) ?? 1, // Mặc định là 1 nếu null
-      priceAtPurchase: _parseDouble(json['priceAtPurchase']),
-      subTotal: _parseDouble(json['subTotal']),
+      quantity: parseInt(json['quantity']) ?? 1, // Mặc định là 1 nếu null
+      priceAtPurchase: parseDouble(json['priceAtPurchase']),
+      subTotal: parseDouble(json['subTotal']),
       // ✅ Parse dữ liệu từ JSON
       size: json['size'] as String?,
       color: json['color'] as String?,

@@ -9,7 +9,7 @@ import '../../models/voucher_model.dart'; // Import VoucherModel
 String _formatCurrencyForItem(double? value) {
   if (value == null) return "N/A";
   final NumberFormat currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDigits: 0, name: '');
-  return currencyFormatter.format(value) + " VNĐ";
+  return "${currencyFormatter.format(value)} VNĐ";
 }
 
 class ApplicableVoucherItem extends StatelessWidget {

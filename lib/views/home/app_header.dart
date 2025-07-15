@@ -28,6 +28,15 @@ class AppHeader extends StatelessWidget {
       }
     }
 
+    // ✅ Hàm fix URL cho avatar
+    String fixAvatarUrl(String? url) {
+      const String serverBase = "http://10.0.2.2:8080";
+      if (url == null || url.isEmpty) return '';
+      if (url.startsWith('http')) return url;
+      if (url.startsWith('/')) return serverBase + url;
+      return '$serverBase/images/avatars/$url';
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       child: Row(
@@ -40,7 +49,7 @@ class AppHeader extends StatelessWidget {
             child: ClipOval(
               child: user?.avt_url != null && user!.avt_url.isNotEmpty
                   ? Image.network(
-                user.avt_url,
+                fixAvatarUrl(user.avt_url),
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,
@@ -109,7 +118,8 @@ class AppHeader extends StatelessWidget {
                     child: IconButton(
                       icon: const Icon(Iconsax.notification, size: 28),
                       onPressed: () {
-                        Navigator.of(context).pushNamed(NotificationScreen.routeName);
+                        Navigator.of(context)
+                            .pushNamed(NotificationScreen.routeName);
                       },
                       tooltip: "Thông báo",
                       color: Colors.grey[700],

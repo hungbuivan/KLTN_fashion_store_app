@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 // Import các provider và model cần thiết
 import '../../../providers/order_provider.dart';
 import '../../../models/order_summary_model.dart';
-import 'package:fashion_store_app/models/page_response_model.dart';
 
 import 'admin_order_detail_screen.dart';
 
@@ -19,7 +18,7 @@ final currencyFormatter = NumberFormat.simpleCurrency(locale: 'vi_VN', decimalDi
 
 String _formatCurrency(double? value) {
   if (value == null) return "N/A";
-  return currencyFormatter.format(value) + " VNĐ";
+  return "${currencyFormatter.format(value)} VNĐ";
 }
 
 String _fixImageUrl(String? originalUrlFromApi) {

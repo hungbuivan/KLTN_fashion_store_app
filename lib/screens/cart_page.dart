@@ -41,7 +41,7 @@ class _CartPageState extends State<CartPage> {
     if (originalUrlFromApi.startsWith('http://') || originalUrlFromApi.startsWith('https://')) {
       // Nếu là localhost thì thay bằng 10.0.2.2
       if (originalUrlFromApi.contains('://localhost:8080')) {
-        return originalUrlFromApi.replaceFirst('://localhost:8080', '$baseUrl');
+        return originalUrlFromApi.replaceFirst('://localhost:8080', baseUrl);
       }
       return originalUrlFromApi;
     }
@@ -353,7 +353,7 @@ class _CartPageState extends State<CartPage> {
                 Navigator.pushReplacementNamed(context, '/checkout');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

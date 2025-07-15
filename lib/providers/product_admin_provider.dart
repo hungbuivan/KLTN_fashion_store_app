@@ -1,11 +1,10 @@
 // file: lib/providers/admin/product_admin_provider.dart
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path_helper; // Đổi tên để tránh trùng với 'path' của Flutter
-import 'package:http_parser/http_parser.dart'; // << THÊM IMPORT NÀY
+// Đổi tên để tránh trùng với 'path' của Flutter
+// << THÊM IMPORT NÀY
 
 import 'package:fashion_store_app/models/admin/product_admin_model.dart';
 import 'package:fashion_store_app/models/page_response_model.dart';

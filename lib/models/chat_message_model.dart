@@ -38,12 +38,12 @@ class ChatMessageModel {
   // Hàm tạo một bản sao của tin nhắn với trạng thái isSeen đã được cập nhật
   ChatMessageModel copyWith({bool? isSeen}) {
     return ChatMessageModel(
-      id: this.id,
-      roomId: this.roomId,
-      senderId: this.senderId,
-      senderType: this.senderType,
-      content: this.content,
-      timestamp: this.timestamp,
+      id: id,
+      roomId: roomId,
+      senderId: senderId,
+      senderType: senderType,
+      content: content,
+      timestamp: timestamp,
       isSeen: isSeen ?? this.isSeen,
     );
   }

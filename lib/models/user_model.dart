@@ -44,7 +44,8 @@ class User {
       role: jsonMap['role'] as String? ?? 'user', // Mặc định role là 'user' nếu null
       phone: jsonMap['phone'] as String? ?? '',
       gender: jsonMap['gender'] as String? ?? '',
-      avt_url: jsonMap['avt_url'] as String? ?? '',
+      avt_url: jsonMap['avatarUrl'] as String? ?? '',
+
     );
   }
 

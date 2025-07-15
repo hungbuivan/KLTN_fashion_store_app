@@ -32,30 +32,31 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   // ✅ STATE MỚI: Lưu ID của tin nhắn đang được nhấn vào
   int? _expandedMessageId;
 
+  late ChatProvider _chatProvider; // Khai báo ở đầu lớp _ChatMessageScreenState
+
   @override
   void initState() {
     super.initState();
-    // Cài đặt ngôn ngữ Tiếng Việt cho timeago
     timeago.setLocaleMessages('vi', timeago.ViMessages());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final chatProvider = context.read<ChatProvider>();
-      chatProvider.clearChatMessages();
-      // Sau khi tải lịch sử, đánh dấu phòng là đã đọc
-      chatProvider.fetchMessageHistory(widget.roomId).then((_) {
-        chatProvider.markRoomAsRead(widget.roomId);
+      _chatProvider = context.read<ChatProvider>(); // Lưu lại 1 lần duy nhất
+      _chatProvider.clearChatMessages();
+      _chatProvider.fetchMessageHistory(widget.roomId).then((_) {
+        _chatProvider.markRoomAsRead(widget.roomId);
       });
-      chatProvider.connectAndSubscribe(widget.roomId);
+      _chatProvider.connectAndSubscribe(widget.roomId);
     });
   }
 
   @override
   void dispose() {
-    context.read<ChatProvider>().disconnect();
+    _chatProvider.disconnect(); // Sử dụng biến đã lưu trước đó
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
+
 
   // ✅ HÀM MỚI: Xử lý khi người dùng nhấn vào một tin nhắn
   void _toggleMessageExpansion(int messageId) {

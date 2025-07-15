@@ -1,7 +1,6 @@
 // lib/screens/admin/admin_home_page.dart
 import 'package:fashion_store_app/screens/admin/pages/order_management_page.dart';
 import 'package:fashion_store_app/screens/admin/pages/voucher_management_page.dart';
-import 'package:fashion_store_app/views/admin/order_management_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fashion_store_app/views/admin/admin_dashboard.dart';
 import 'package:fashion_store_app/views/admin/admin_notifications.dart';
@@ -191,7 +190,7 @@ class _AdminHomePageState extends State<AdminHomePage> with WidgetsBindingObserv
               },
             ),
             ListTile(
-              leading: Icon(Iconsax.folder_add4), // hoặc Icons.bar_chart
+              leading: Icon(Iconsax.ticket_discount), // hoặc Icons.bar_chart
               title: const Text('Quản lý Mã giảm giá'),
               onTap: () {
                 _navigateToVoucherManagement(context);

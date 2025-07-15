@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import '../../../providers/notification_provider.dart';
 import '../../../models/notification_model.dart';
 import '../../screens/admin/pages/admin_order_detail_screen.dart';
-import '../../screens/order_detail_screen.dart';
 
 
 class AdminNotificationsScreen extends StatefulWidget {

@@ -50,21 +50,21 @@ class OrderDetailModel {
 
   factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
     // Helper an toàn để parse
-    int? _parseInt(dynamic value) {
+    int? parseInt(dynamic value) {
       if (value == null) return null;
       if (value is int) return value;
       if (value is String) return int.tryParse(value);
       if (value is double) return value.toInt();
       return null;
     }
-    double? _parseDouble(dynamic value) {
+    double? parseDouble(dynamic value) {
       if (value == null) return null;
       if (value is double) return value;
       if (value is int) return value.toDouble();
       if (value is String) return double.tryParse(value);
       return null;
     }
-    DateTime? _parseDateTime(String? dateString) {
+    DateTime? parseDateTime(String? dateString) {
       if (dateString == null || dateString.isEmpty) return null;
       try {
         return DateTime.parse(dateString);
@@ -88,15 +88,15 @@ class OrderDetailModel {
     }
 
     // Sử dụng createdAt cho orderDate nếu orderDate trong JSON là null hoặc không có
-    DateTime? effectiveOrderDate = _parseDateTime(json['createdAt'] as String?);
+    DateTime? effectiveOrderDate = parseDateTime(json['createdAt'] as String?);
     if (json['orderDate'] != null) { // Ưu tiên orderDate từ JSON nếu có
-      effectiveOrderDate = _parseDateTime(json['orderDate'] as String?) ?? effectiveOrderDate;
+      effectiveOrderDate = parseDateTime(json['orderDate'] as String?) ?? effectiveOrderDate;
     }
 
 
     return OrderDetailModel(
-      orderId: _parseInt(json['orderId']) ?? 0, // Cần ID, nếu null thì là lỗi dữ liệu
-      userId: _parseInt(json['orderId']) ?? 0,
+      orderId: parseInt(json['orderId']) ?? 0, // Cần ID, nếu null thì là lỗi dữ liệu
+      userId: parseInt(json['orderId']) ?? 0,
       userEmail: json['userEmail'] as String?,
       userName: json['userName'] as String?,
       userPhone: json['userPhone'] as String?,
@@ -105,15 +105,15 @@ class OrderDetailModel {
       shippingAddress: parsedShippingAddress,
       paymentMethod: json['paymentMethod'] as String? ?? 'N/A',
       items: parsedItems,
-      subtotalAmount: _parseDouble(json['subtotalAmount']),
-      shippingFee: _parseDouble(json['shippingFee']),
+      subtotalAmount: parseDouble(json['subtotalAmount']),
+      shippingFee: parseDouble(json['shippingFee']),
       appliedVoucherCode: json['appliedVoucherCode'] as String?,
-      voucherDiscountAmount: _parseDouble(json['voucherDiscountAmount']),
-      totalAmount: _parseDouble(json['totalAmount']),
+      voucherDiscountAmount: parseDouble(json['voucherDiscountAmount']),
+      totalAmount: parseDouble(json['totalAmount']),
       adminCancelReason: json['adminCancelReason'] as String?,
       userCancelReason: json['userCancelReason'] as String?,
-      createdAt: _parseDateTime(json['createdAt'] as String?), // Thời điểm tạo bản ghi
-      updatedAt: _parseDateTime(json['updatedAt'] as String?),
+      createdAt: parseDateTime(json['createdAt'] as String?), // Thời điểm tạo bản ghi
+      updatedAt: parseDateTime(json['updatedAt'] as String?),
     );
   }
 

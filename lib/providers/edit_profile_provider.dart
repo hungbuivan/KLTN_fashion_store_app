@@ -1,6 +1,6 @@
 // file: lib/providers/edit_profile_provider.dart
 import 'dart:convert';
-import 'dart:io'; // Để làm việc với File
+// Để làm việc với File
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart'; // Import image_picker
@@ -105,6 +105,7 @@ class EditProfileProvider with ChangeNotifier {
        final response = await http.Response.fromStream(streamedResponse);
 
        print("Update profile response: ${response.statusCode} - ${response.body}");
+       print("🔥 Avatar mới trong AuthProvider: ${authProvider.user?.avt_url}");
 
        if (response.statusCode == 200) {
          await authProvider.fetchAndSetUser(); // cập nhật lại thông tin user mới

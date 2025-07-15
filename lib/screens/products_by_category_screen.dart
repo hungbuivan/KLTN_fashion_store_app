@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
 
 // Import các provider và model cần thiết
 import '../providers/products_by_category_provider.dart';

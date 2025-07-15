@@ -51,14 +51,24 @@ class OrderCreateRequestData {
 class CartItemInfoData {
   final int productId;
   final int quantity;
+  final String? size;
+  final String? color;
 
-  CartItemInfoData({required this.productId, required this.quantity});
+  CartItemInfoData({
+    required this.productId,
+    required this.quantity,
+    this.size,
+    this.color,
+  });
 
   Map<String, dynamic> toJson() => {
     'productId': productId,
     'quantity': quantity,
+    if (size != null) 'size': size,
+    if (color != null) 'color': color,
   };
 }
+
 
 
 class OrderProvider with ChangeNotifier {
@@ -288,7 +298,7 @@ class OrderProvider with ChangeNotifier {
         if (orderPayload.voucherCode != null && orderPayload.voucherCode!.isNotEmpty) 'voucherCode': orderPayload.voucherCode,
       };
 
-      final url = Uri.parse('$_baseGeneralOrderUrl');
+      final url = Uri.parse(_baseGeneralOrderUrl);
       print("OrderProvider: Creating order to $url with data: ${jsonEncode(finalPayloadJson)}");
 
       final response = await http.post(
@@ -510,9 +520,7 @@ class OrderProvider with ChangeNotifier {
   }
 
   // ✅ PHẦN THÊM MỚI: CÁC HÀM CHO ADMIN
-  /**
-   * Admin: Lấy tất cả đơn hàng với phân trang, sắp xếp và lọc (nếu có)
-   */
+  /// Admin: Lấy tất cả đơn hàng với phân trang, sắp xếp và lọc (nếu có)
   Future<void> fetchAllOrdersForAdmin({
     int page = 0,
     int size = 15,
@@ -576,9 +584,7 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  /**
-   * Admin: Cập nhật trạng thái của một đơn hàng
-   */
+  /// Admin: Cập nhật trạng thái của một đơn hàng
   Future<bool> updateAdminOrderStatus(
       int orderId, String newStatus, {String? reason, String? trackingNumber}) async {
 
@@ -673,10 +679,6 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }
 
 // Placeholder cho Pageable (bạn có thể tạo model này trong file riêng nếu cần dùng nhiều)

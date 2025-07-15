@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:intl/intl.dart';
 import 'package:fashion_store_app/utils/formatter.dart';
 // Import các provider và model cần thiết
 import '../providers/order_provider.dart';
@@ -249,6 +248,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   // Widget cho mỗi sản phẩm trong đơn hàng
    Widget _buildOrderItemTile(OrderItemModel item, OrderDetailModel order) {
      final bool canReview = order.status.toUpperCase() == 'DELIVERED' || order.status.toUpperCase() == 'COMPLETED';
+     print("👉 Màu: ${item.color}, Size: ${item.size}");
 
      return Column(
        crossAxisAlignment: CrossAxisAlignment.start,

@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 
 // Import các model và provider cần thiết
 import '../../../models/admin/product_admin_model.dart';
-import '../../../models/admin/product_variant_admin_model.dart';
 import '../../../providers/brand_admin_provider.dart';
 import '../../../providers/category_admin_provider.dart';
 import '../../../providers/product_admin_provider.dart';
@@ -65,7 +64,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   int? _selectedBrandId;
 
   // State quản lý ảnh
-  List<XFile> _newImageFiles = [];
+  final List<XFile> _newImageFiles = [];
   List<String> _existingImageUrls = [];
 
   bool _isPopular = false;

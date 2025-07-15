@@ -237,7 +237,7 @@ class WishlistProvider with ChangeNotifier {
     // truy cập trực tiếp vào newAuth mà không muốn chờ ProxyProvider tạo lại instance.
 
     // Ví dụ: Nếu user thay đổi từ guest -> loggedIn, hoặc loggedIn -> guest
-    bool wasAuthenticated = this.authProvider.isAuthenticated;
+    bool wasAuthenticated = authProvider.isAuthenticated;
     bool isAuthenticatedNow = newAuth.isAuthenticated;
 
     if (wasAuthenticated != isAuthenticatedNow) {
@@ -248,7 +248,7 @@ class WishlistProvider with ChangeNotifier {
         print("WishlistProvider's updateAuthProvider: User is now unauthenticated. Clearing wishlist.");
         clearWishlistOnLogout();
       }
-    } else if (isAuthenticatedNow && newAuth.user != null && this.authProvider.user?.id != newAuth.user?.id) {
+    } else if (isAuthenticatedNow && newAuth.user != null && authProvider.user?.id != newAuth.user?.id) {
       // User thay đổi (ví dụ: chuyển tài khoản mà không logout hẳn)
       print("WishlistProvider's updateAuthProvider: User changed. Fetching wishlist for new user.");
       fetchWishlist();
@@ -269,8 +269,4 @@ class WishlistProvider with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 }
