@@ -19,6 +19,7 @@ class InvoiceScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Hóa đơn #${order.orderId}'),
+        backgroundColor: Colors.blue,
       ),
       body: PdfPreview(
         build: (format) => _generatePdf(format, order),
@@ -115,9 +116,12 @@ class InvoiceScreen extends StatelessWidget {
         pw.Text('Người nhận: ${order.shippingAddress?.fullNameReceiver}', style: pw.TextStyle(font: ttf)),
         pw.Text('SĐT: ${order.shippingAddress?.phoneReceiver}', style: pw.TextStyle(font: ttf)),
         pw.Text('Địa chỉ: ${order.shippingAddress?.fullAddressString}', style: pw.TextStyle(font: ttf)),
+        pw.Text('Phương thức thanh toán: ${order.paymentMethod ?? "Chưa có"}', style: pw.TextStyle(font: ttf)), // ✅ thêm dòng này
       ],
     );
   }
+
+
 
   pw.Widget _buildItemsTable(pw.Context context, OrderDetailModel order, pw.Font ttf, pw.Font ttfBold) {
     final headers = ['STT', 'Tên sản phẩm', 'SL', 'Đơn giá', 'Thành tiền'];
@@ -159,6 +163,8 @@ class InvoiceScreen extends StatelessWidget {
   }
 
   pw.Widget _buildTotals(pw.Context context, OrderDetailModel order, pw.Font ttf, pw.Font ttfBold) {
+    final isVietQR = order.paymentMethod?.toUpperCase() == 'VIETQR';
+
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.end,
       children: [
@@ -192,13 +198,26 @@ class InvoiceScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+              if (isVietQR)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 5),
+
+                  child: pw.Text(
+                    'Khách đã chuyển khoản qua VietQR.',
+                    style: pw.TextStyle(font: ttf, color: PdfColors.black, fontStyle: pw.FontStyle.italic),
+                  ),
+                ),
               pw.Divider(),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text('TỔNG CỘNG:', style: pw.TextStyle(font: ttfBold, fontSize: 16, color: PdfColors.black)),
-                  pw.Text(currencyFormatter.format(order.totalAmount),
-                      style: pw.TextStyle(font: ttfBold, fontSize: 16, color: PdfColors.black)),
+                  pw.Text(
+                    isVietQR
+                        ? currencyFormatter.format(0)
+                        : currencyFormatter.format(order.totalAmount),
+                    style: pw.TextStyle(font: ttfBold, fontSize: 16, color: PdfColors.black),
+                  ),
                 ],
               ),
             ],
@@ -208,12 +227,34 @@ class InvoiceScreen extends StatelessWidget {
     );
   }
 
+
   pw.Widget _buildFooter(pw.Context context, pw.Font ttf) {
     return pw.Center(
-      child: pw.Text(
-        'Cảm ơn quý khách đã mua hàng tại Fashion Store!',
-        style: pw.TextStyle(font: ttf, fontStyle: pw.FontStyle.italic, fontSize: 12, color: PdfColors.black),
+      child: pw.Column(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: [
+          pw.Text(
+            'Cảm ơn quý khách đã mua hàng tại Fashion Store!',
+            style: pw.TextStyle(
+              font: ttf,
+              fontStyle: pw.FontStyle.italic,
+              fontSize: 14,
+              color: PdfColors.black,
+            ),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            'Mọi chi tiết xin liên hệ qua \nemail: admin@shop.com hoặc sđt: 0987654321',
+            style: pw.TextStyle(
+              font: ttf,
+              fontSize: 13,
+              color: PdfColors.black,
+            ),
+            textAlign: pw.TextAlign.center,
+          ),
+        ],
       ),
     );
   }
+
 }

@@ -186,4 +186,5 @@ class EditProfileProvider with ChangeNotifier {
      confirmPasswordController.dispose();
    }
 
+
 }

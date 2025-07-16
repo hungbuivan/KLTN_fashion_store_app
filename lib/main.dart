@@ -283,6 +283,7 @@ class MyApp extends StatelessWidget {
                 builder: (_) => ChatMessageScreen(
                   roomId: args['roomId'],
                   userName: args['userName'],
+
                 ),
               );
             } else {
