@@ -108,19 +108,19 @@ class _CartPageState extends State<CartPage> {
       appBar: AppBar(
         title: const Text('Giỏ hàng của bạn'),
         // ✅ CẬP NHẬT NÚT BACK
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).appBarTheme.iconTheme?.color ?? Colors.black),
-          onPressed: () {
-            // Chuyển về tab Trang chủ (index 0) của BottomNavigationBar
-            context.read<BottomNavProvider>().changeTab(0);
-            // Sau đó pop màn hình CartPage hiện tại (nếu nó được push lên)
-            if (Navigator.canPop(context)) {
-              Navigator.of(context).pop();
-            }
-            // Nếu CartPage là một tab chính và không pop được,
-            // việc changeTab ở trên đã đủ để chuyển về tab Home.
-          },
-        ),
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).appBarTheme.iconTheme?.color ?? Colors.black),
+        //   onPressed: () {
+        //     // Chuyển về tab Trang chủ (index 0) của BottomNavigationBar
+        //     context.read<BottomNavProvider>().changeTab(0);
+        //     // Sau đó pop màn hình CartPage hiện tại (nếu nó được push lên)
+        //     if (Navigator.canPop(context)) {
+        //       Navigator.of(context).pop();
+        //     }
+        //     // Nếu CartPage là một tab chính và không pop được,
+        //     // việc changeTab ở trên đã đủ để chuyển về tab Home.
+        //   },
+        // ),
         actions: [
           if (cart != null && cart.items.isNotEmpty)
             IconButton(
@@ -353,7 +353,7 @@ class _CartPageState extends State<CartPage> {
                 Navigator.pushReplacementNamed(context, '/checkout');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

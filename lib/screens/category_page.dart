@@ -181,7 +181,7 @@ class _CategoryPageState extends State<CategoryPage> with TickerProviderStateMix
       color: Colors.grey.withOpacity(0.05),
       child: ListTile(
         contentPadding: const EdgeInsets.only(left: 30.0, right: 16.0),
-        leading: const Icon(Iconsax.category_2, size: 20),
+        leading: const Icon(Iconsax.category, size: 20),
         title: Text(subCategory.name),
         trailing: const Icon(Iconsax.arrow_right_3, size: 18),
         onTap: () {

@@ -23,6 +23,7 @@ class InvoiceScreen extends StatelessWidget {
       ),
       body: PdfPreview(
         build: (format) => _generatePdf(format, order),
+        //useActions: false, // <- Ẩn hết thanh dưới
         canChangePageFormat: false,
         canChangeOrientation: false,
         allowSharing: true,

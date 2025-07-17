@@ -226,44 +226,43 @@ class _AdminHomePageState extends State<AdminHomePage> with WidgetsBindingObserv
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(icon: Icon(Iconsax.chart_2), label: 'Trang chủ'),
-          BottomNavigationBarItem(
-            icon: Consumer<NotificationProvider>(
-              builder: (context, notificationProvider, child) {
-                return Badge(
+      bottomNavigationBar: NavigationBar(
+        height: 70,
+        elevation: 0,
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: _onItemTapped,
+        //indicatorColor: Colors.transparent, // ❌ Ẩn nền xanh nhạt khi chọn
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
+          const NavigationDestination(icon: Icon(Iconsax.home), label: 'Trang chủ'),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              return NavigationDestination(
+                icon: Badge(
                   isLabelVisible: notificationProvider.unreadCount > 0,
                   label: Text(notificationProvider.unreadCount.toString()),
-                  child: child!,
-                );
-              },
-              child: const Icon(Iconsax.notification_bing),
-            ),
-            label: 'Thông báo',
+                  child: const Icon(Iconsax.notification_bing),
+                ),
+                label: 'Thông báo',
+              );
+            },
           ),
-          // ✅ HUY HIỆU TIN NHẮN
-          BottomNavigationBarItem(
-            icon: Consumer<ChatProvider>(
-              builder: (context, provider, child) {
-                return Badge(
+          Consumer<ChatProvider>(
+            builder: (context, provider, child) {
+              return NavigationDestination(
+                icon: Badge(
                   isLabelVisible: provider.totalUnreadRoomsCount > 0,
                   label: Text(provider.totalUnreadRoomsCount.toString()),
-                  child: child!,
-                );
-              },
-              child: const Icon(Iconsax.message_text_1),
-            ),
-            label: 'Tin nhắn',
+                  child: const Icon(Iconsax.message_text_1),
+                ),
+                label: 'Tin nhắn',
+              );
+            },
           ),
-          const BottomNavigationBarItem(icon: Icon(Iconsax.user_octagon), label: 'Tôi'),
+          const NavigationDestination(icon: Icon(Iconsax.user), label: 'Tài khoản'),
         ],
       ),
+
     );
   }
 }

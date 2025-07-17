@@ -33,9 +33,9 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Thông báo Admin'),
-      ),
+      // appBar: AppBar(
+      //   // title: const Text('Thông báo Admin'),
+      // ),
       body: Consumer<NotificationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {

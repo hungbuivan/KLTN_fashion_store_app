@@ -812,6 +812,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final paymentMethods = [
       {'code': 'COD', 'name': 'Thanh toán khi nhận hàng (COD)', 'icon': Iconsax.money_send},
       {'code': 'VIETQR', 'name': 'Chuyển khoản bằng mã VietQR', 'icon': Iconsax.scan_barcode},
+
     ];
 
     return Column(

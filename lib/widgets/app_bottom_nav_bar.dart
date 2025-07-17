@@ -18,6 +18,7 @@ class AppBottomNavBar extends StatelessWidget {
       elevation: 0,
       selectedIndex: selectedIndex,
       onDestinationSelected: onDestinationSelected,
+      // indicatorColor: Colors.transparent, // ❌ Ẩn phần bóng xám
       destinations: const [
         NavigationDestination(icon: Icon(Iconsax.home), label: "Trang chủ"),
         NavigationDestination(icon: Icon(Iconsax.category), label: "Danh mục"),

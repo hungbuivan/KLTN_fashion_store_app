@@ -236,6 +236,19 @@ class ProductManagementListItem extends StatelessWidget {
             Text('Kho: ${product.stock ?? 0}'),
           ],
         ),
+
+        // subtitle: Column(
+        //   crossAxisAlignment: CrossAxisAlignment.start,
+        //   children: [
+        //     Text('Giá: ${currencyFormatter.format(product.price ?? 0)}'),
+        //     Text('Kho tổng: ${product.stock ?? 0}'),
+        //     if (product.variants != null && product.variants!.isNotEmpty)
+        //       ...product.variants!.map((v) => Text(
+        //         '- Size: ${v.size ?? '---'}, Màu: ${v.color ?? '---'}, SL: ${v.stock ?? 0}',
+        //         style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+        //       )),
+        //   ],
+        // ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
